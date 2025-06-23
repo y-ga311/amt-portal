@@ -34,7 +34,14 @@ interface TestData {
   moxibustion_theory: number | null
 }
 
-export default function EditTestPage({ params }: { params: { id: string } }) {
+export default async function EditTestPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  
+  return <EditTestClient params={resolvedParams} />
+}
+
+// クライアントコンポーネント
+function EditTestClient({ params }: { params: { id: string } }) {
   const [isLoading, setIsLoading] = useState(true)
   const [test, setTest] = useState<TestData | null>(null)
   const [error, setError] = useState<string | null>(null)

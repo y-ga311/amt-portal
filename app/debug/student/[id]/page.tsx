@@ -10,7 +10,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { debugStudentData, addTestDataForStudent } from "@/app/actions/debug-student-data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default function StudentDebugPage({ params }: { params: { id: string } }) {
+export default async function StudentDebugPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  
+  return <StudentDebugClient params={resolvedParams} />
+}
+
+// クライアントコンポーネント
+function StudentDebugClient({ params }: { params: { id: string } }) {
   const [isLoading, setIsLoading] = useState(true)
   const [debugData, setDebugData] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)

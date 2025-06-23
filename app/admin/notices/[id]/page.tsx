@@ -75,7 +75,14 @@ function MailSendStatus({ noticeId }: { noticeId: number }) {
 }
 
 // お知らせ編集画面のコンポーネント
-export default function EditNoticePage({ params }: { params: { id: string } }) {
+export default async function EditNoticePage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  
+  return <EditNoticeClient params={resolvedParams} />
+}
+
+// クライアントコンポーネント
+function EditNoticeClient({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [notice, setNotice] = useState<Notice | null>(null)
   const supabase = createClientComponentClient()

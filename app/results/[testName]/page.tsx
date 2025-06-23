@@ -16,7 +16,14 @@ import { RankingDisplay } from "@/components/ranking-display"
 import { BadgeDisplay } from "@/components/badge-display"
 import { getTestRanking, getStudentBadges } from "@/app/actions/rankings"
 
-export default function TestResultDetailPage({ params }: { params: { testName: string } }) {
+export default async function TestResultDetailPage({ params }: { params: Promise<{ testName: string }> }) {
+  const resolvedParams = await params
+  
+  return <TestResultDetailClient params={resolvedParams} />
+}
+
+// クライアントコンポーネント
+function TestResultDetailClient({ params }: { params: { testName: string } }) {
   const [studentId, setStudentId] = useState("")
   const [studentName, setStudentName] = useState("")
   const [testResult, setTestResult] = useState<any>(null)

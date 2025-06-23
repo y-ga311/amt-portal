@@ -75,9 +75,30 @@ interface GroupedTestScores {
 }
 
 // 最大点数の計算関数
-const calculateMaxScore = (questionCounts: QuestionCounts): number => {
-  // 一時的に固定値を返す（型エラーを回避）
-  return 190
+const calculateMaxScore = (questionCounts: QuestionCounts) => {
+  const subjects = [
+    'medical_overview',
+    'public_health',
+    'related_laws',
+    'anatomy',
+    'physiology',
+    'pathology',
+    'clinical_medicine_overview',
+    'clinical_medicine_detail',
+    'clinical_medicine_detail_total',
+    'rehabilitation',
+    'oriental_medicine_overview',
+    'meridian_points',
+    'oriental_medicine_clinical',
+    'oriental_medicine_clinical_general',
+    'acupuncture_theory',
+    'moxibustion_theory'
+  ]
+  
+  return subjects.reduce((sum, subject) => {
+    const value = questionCounts[subject as keyof QuestionCounts]
+    return sum + (typeof value === 'number' ? value : 0)
+  }, 0)
 }
 
 export default function ResultsPage() {
@@ -137,11 +158,13 @@ export default function ResultsPage() {
         }
         
         // テスト結果を試験ごとにグループ化
-        const grouped = (data.data as any[]).reduce((acc: any, score: any) => {
-          const key = `${score.test_name}_${score.test_date}`;
+        const grouped = data.data.reduce((acc: GroupedTestScores, score: TestScore) => {
+          const key = `${score.test_name}_${score.test_date}`
           if (!acc[key]) {
-            const questionCounts = questionCountsMap[score.test_name];
-            const maxScore = questionCounts ? calculateMaxScore(questionCounts) : 190;
+            // question_countsテーブルから最大点数を取得
+            const questionCounts = questionCountsMap[score.test_name]
+            const maxScore = questionCounts ? calculateMaxScore(questionCounts) : 190 // フォールバック値
+
             acc[key] = {
               test_name: score.test_name,
               test_date: score.test_date,
@@ -150,22 +173,23 @@ export default function ResultsPage() {
               pass_count: 0,
               total_count: 0,
               max_score: maxScore,
-              pass_score: Math.floor(maxScore * 0.6)
-            };
+              pass_score: Math.floor(maxScore * 0.6) // 60%を合格ラインとする
+            }
           }
-          acc[key].scores.push(score);
-          acc[key].total_count++;
+          acc[key].scores.push(score)
+          acc[key].total_count++
+          // 正答率60%以上を合格とする
           if (score.total_score >= acc[key].pass_score) {
-            acc[key].pass_count++;
+            acc[key].pass_count++
           }
-          return acc;
-        }, {} as any);
+          return acc
+        }, {} as GroupedTestScores)
 
         // 平均点を計算
-        (Object.entries(grouped) as any).forEach((entry: any) => {
-          const group = entry[1];
-          const total = group.scores.reduce((sum: number, score: TestScore) => sum + score.total_score, 0)
-          group.average_score = Math.round((total / group.total_count) * 10) / 10
+        Object.entries(grouped).forEach(([key, group]) => {
+          const typedGroup = group as GroupedTestScores[string]
+          const total = typedGroup.scores.reduce((sum: number, score: TestScore) => sum + score.total_score, 0)
+          typedGroup.average_score = Math.round((total / typedGroup.total_count) * 10) / 10
         })
 
         setGroupedScores(grouped)

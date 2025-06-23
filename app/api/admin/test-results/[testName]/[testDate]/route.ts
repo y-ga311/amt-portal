@@ -23,10 +23,10 @@ const adminSupabase = createSupabaseClient()
 
 export async function GET(
   request: Request,
-  { params }: { params: { testName: string; testDate: string } }
+  { params }: { params: Promise<{ testName: string; testDate: string }> }
 ) {
   try {
-    const { testName, testDate } = params
+    const { testName, testDate } = await params
 
     // テスト結果を取得
     const { data: testScores, error: testScoresError } = await adminSupabase
@@ -67,10 +67,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { testName: string; testDate: string } }
+  { params }: { params: Promise<{ testName: string; testDate: string }> }
 ) {
   try {
-    const { testName, testDate } = params
+    const { testName, testDate } = await params
     const testScores = await request.json()
 
     // テスト結果を更新

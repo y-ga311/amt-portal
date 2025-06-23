@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
 import { sendNoticeMail } from '@/app/utils/mail'
-import { Notice } from "@/app/types/notice"
+import { Notice } from "@/types/notice"
 
 export default function NoticesPage() {
   const router = useRouter()

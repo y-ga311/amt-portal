@@ -9,12 +9,14 @@ import { useToast } from '@/components/ui/use-toast'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import type { Notice } from '@/types/notice'
 
 interface NoticeFormProps {
   onNoticeCreated?: () => void
+  initialData?: Notice
 }
 
-export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
+export function NoticeForm({ onNoticeCreated, initialData }: NoticeFormProps) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [targetType, setTargetType] = useState('all')
@@ -46,6 +48,16 @@ export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
 
     checkSession()
   }, [supabase, router])
+
+  useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title)
+      setContent(initialData.content)
+      setTargetType(initialData.target_type)
+      setTargetClass(initialData.target_class || '')
+      setFileUrl(initialData.image_url || '')
+    }
+  }, [initialData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

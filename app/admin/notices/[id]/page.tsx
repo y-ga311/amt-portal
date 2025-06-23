@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Notice } from '@/app/types/notice'
+import { Notice } from '@/types/notice'
 
 // メール送信状態の表示コンポーネント
 function MailSendStatus({ noticeId }: { noticeId: number }) {

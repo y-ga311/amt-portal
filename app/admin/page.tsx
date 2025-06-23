@@ -13,7 +13,7 @@ import { Loader2 } from "lucide-react"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import crypto from 'crypto'
 import Image from 'next/image'
-import { Notice } from "@/app/types/notice"
+import { Notice } from "@/types/notice"
 
 // ハッシュ化の設定
 const FIXED_SALT = 'toyoiryo_admin_salt_2024'  // 固定のソルト

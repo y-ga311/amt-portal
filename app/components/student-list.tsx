@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Student } from "./student-import"
+import type { Student } from "@/types/student"
 import { Pencil, Trash2, Plus } from "lucide-react"
 import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -11,8 +11,8 @@ import { useToast } from "@/hooks/use-toast"
 export type StudentListProps = {
   students: Student[]
   onEdit: (student: Student) => void
-  onDelete: (studentId: string) => void
-  onAdd: (student: Omit<Student, "id" | "created_at" | "updated_at">) => void
+  onDelete: (studentId: string) => Promise<void>
+  onAdd: (student: Omit<Student, "id" | "created_at" | "updated_at">) => Promise<void>
 }
 
 export default function StudentList({ students, onEdit, onDelete, onAdd }: StudentListProps) {

@@ -28,6 +28,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@/types/*": [
+        "./types/*"
       ]
     },
     "forceConsistentCasingInFileNames": true

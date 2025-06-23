@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button"
 import { CharacterIcon } from "@/components/character-icon"
 import Link from "next/link"
 import { ChevronLeft, AlertCircle, Database, RefreshCw, Plus } from "lucide-react"
-import StudentImport from "@/components/student-import"
+import StudentImport from "@/app/components/student-import"
 import type { Student } from "@/types/student"
-import StudentList from "@/components/student-list"
+import StudentList from "@/app/components/student-list"
 import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -19,19 +19,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-interface Student {
-  id: string
-  name: string
-  gakusei_id: string
-  gakusei_password: string
-  hogosya_id: string
-  hogosya_pass: string
-  hogosya_email?: string
-  class?: string
-  created_at?: string
-  updated_at?: string
-}
 
 export default function StudentsPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -506,7 +493,7 @@ export default function StudentsPage() {
                   <StudentList
                     students={students}
                     onEdit={handleEdit}
-                    onDelete={handleDeleteClick}
+                    onDelete={handleDeleteStudent}
                     onAdd={handleAddStudent}
                   />
               </CardContent>
@@ -559,9 +546,9 @@ export default function StudentsPage() {
                         onClick={() => {
                           // エクスポート機能の実装
                           const csvContent = "data:text/csv;charset=utf-8," + 
-                            "id,name,gakusei_id,gakusei_password,hogosya_id,hogosya_pass,mail,class\n" +
+                            "id,name,gakusei_id,gakusei_password,hogosya_id,hogosya_pass,hogosya_email,class\n" +
                             students.map(student => 
-                              `${student.id},${student.name},${student.gakusei_id},${student.gakusei_password},${student.hogosya_id},${student.hogosya_pass},${student.mail || ''},${student.class}`
+                              `${student.id},${student.name},${student.gakusei_id},${student.gakusei_password},${student.hogosya_id},${student.hogosya_pass},${student.hogosya_email || ''},${student.class}`
                             ).join("\n");
                           const encodedUri = encodeURI(csvContent);
                           const link = document.createElement("a");

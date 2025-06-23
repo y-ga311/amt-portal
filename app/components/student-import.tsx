@@ -2,18 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileUp, FileDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-
-export type Student = {
-  id: string
-  name: string
-  gakusei_id: string
-  gakusei_password: string
-  hogosya_id: string
-  hogosya_pass: string
-  class?: string
-  created_at?: string
-  updated_at?: string
-}
+import type { Student } from "@/types/student"
 
 export type StudentImportProps = {
   onImportSuccess: (students: Student[]) => void

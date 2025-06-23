@@ -138,7 +138,7 @@ export default function ResultsPage() {
         setTestScores(data.data)
         
         // テスト名の一覧を取得
-        const testNames = [...new Set(data.data.map((score: TestScore) => score.test_name))]
+        const testNames = [...new Set(data.data.map((score: TestScore) => score.test_name))] as string[]
         
         // question_countsテーブルから問題数データを取得
         const questionCountsResponse = await fetch("/api/question-counts")
@@ -149,7 +149,7 @@ export default function ResultsPage() {
         if (questionCountsData.success) {
           // 複数のテスト名に対応するため、各テスト名で問題数データを取得
           for (const testName of testNames) {
-            const response = await fetch(`/api/question-counts?testName=${encodeURIComponent(testName)}`)
+            const response = await fetch(`/api/question-counts?testName=${encodeURIComponent(testName as string)}`)
             const result = await response.json()
             if (result.success && result.data) {
               questionCountsMap[testName] = result.data as QuestionCounts
@@ -158,7 +158,8 @@ export default function ResultsPage() {
         }
         
         // テスト結果を試験ごとにグループ化
-        const grouped = data.data.reduce((acc: GroupedTestScores, score: TestScore) => {
+        let grouped: GroupedTestScores = {} as GroupedTestScores
+        grouped = data.data.reduce((acc: GroupedTestScores, score: TestScore) => {
           const key = `${score.test_name}_${score.test_date}`
           if (!acc[key]) {
             // question_countsテーブルから最大点数を取得
@@ -186,7 +187,7 @@ export default function ResultsPage() {
         }, {} as GroupedTestScores)
 
         // 平均点を計算
-        Object.entries(grouped).forEach(([key, group]) => {
+        (Object.entries(grouped) as any).forEach(([key, group]: any) => {
           const typedGroup = group as GroupedTestScores[string]
           const total = typedGroup.scores.reduce((sum: number, score: TestScore) => sum + score.total_score, 0)
           typedGroup.average_score = Math.round((total / typedGroup.total_count) * 10) / 10
@@ -498,7 +499,7 @@ export default function ResultsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {Object.entries(groupedScores).map(([key, group]) => (
+                    {(Object.entries(groupedScores) as any).map(([key, group]: any) => (
                       <TableRow key={key}>
                         <TableCell>
                           <Link

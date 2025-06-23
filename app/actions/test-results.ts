@@ -228,14 +228,14 @@ export async function importTestResults(results: any[]) {
     })
 
     // nullを除外
-    const validResults = formattedResults.filter((result) => result !== null)
+    const validResults = formattedResults.filter((result: any) => result !== null)
 
     if (validResults.length === 0) {
       return { success: false, error: "有効なデータがありません" }
     }
 
     // question_countsテーブルに存在しないテスト名をチェックし、デフォルトデータを追加
-    const uniqueTestNames = [...new Set(validResults.map(result => result.test_name))]
+    const uniqueTestNames = [...new Set(validResults.map((result: any) => result.test_name))]
     
     for (const testName of uniqueTestNames) {
       const { data: existingQuestionCount } = await adminSupabase
@@ -410,14 +410,14 @@ export async function importTestResultsFromCSV(csvData: string, testName: string
     })
 
     // nullを除外
-    const validResults = formattedResults.filter((result) => result !== null)
+    const validResults = formattedResults.filter((result: any) => result !== null)
 
     if (validResults.length === 0) {
       return { success: false, error: "有効なデータがありません" }
     }
 
     // question_countsテーブルに存在しないテスト名をチェックし、デフォルトデータを追加
-    const uniqueTestNames = [...new Set(validResults.map(result => result.test_name))]
+    const uniqueTestNames = [...new Set(validResults.map((result: any) => result.test_name))]
     
     for (const testName of uniqueTestNames) {
       const { data: existingQuestionCount } = await adminSupabase

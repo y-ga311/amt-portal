@@ -30,7 +30,7 @@ export async function getDashboardData() {
     // 学生数と試験数を取得
     const [studentsResult, uniqueTestsResult] = await Promise.all([
       getStudentCount(),
-      getUniqueTests(testScoresResult.data),
+      getUniqueTests(testScoresResult.data || []),
     ])
 
     console.log("ダッシュボードデータを取得しました")
@@ -107,7 +107,7 @@ async function getStudentCountFromTestScores() {
 }
 
 // テスト結果データから一意のテスト数を計算する関数
-function getUniqueTests(testScores: any[]) {
+function getUniqueTests(testScores: any[] | undefined) {
   try {
     // テスト名と日付の組み合わせでユニークなテストを特定
     const uniqueTests = new Set(testScores?.map((item) => `${item.test_name}_${item.test_date}`) || [])

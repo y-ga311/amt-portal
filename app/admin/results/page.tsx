@@ -58,6 +58,7 @@ interface QuestionCounts {
   oriental_medicine_clinical_general: number
   acupuncture_theory: number
   moxibustion_theory: number
+  [key: string]: string | number
 }
 
 interface GroupedTestScores {
@@ -74,30 +75,28 @@ interface GroupedTestScores {
 }
 
 // 最大点数の計算関数
-const calculateMaxScore = (questionCounts: QuestionCounts) => {
-  const subjects = [
-    'medical_overview',
-    'public_health',
-    'related_laws',
-    'anatomy',
-    'physiology',
-    'pathology',
-    'clinical_medicine_overview',
-    'clinical_medicine_detail',
-    'clinical_medicine_detail_total',
-    'rehabilitation',
-    'oriental_medicine_overview',
-    'meridian_points',
-    'oriental_medicine_clinical',
-    'oriental_medicine_clinical_general',
-    'acupuncture_theory',
-    'moxibustion_theory'
-  ]
+const calculateMaxScore = (questionCounts: QuestionCounts): number => {
+  let total = 0
   
-  return subjects.reduce((sum, subject) => {
-    const value = questionCounts[subject as keyof QuestionCounts]
-    return sum + (typeof value === 'number' ? value : 0)
-  }, 0)
+  // 各科目の点数を明示的に取得
+  if (typeof questionCounts.medical_overview === 'number') total += questionCounts.medical_overview
+  if (typeof questionCounts.public_health === 'number') total += questionCounts.public_health
+  if (typeof questionCounts.related_laws === 'number') total += questionCounts.related_laws
+  if (typeof questionCounts.anatomy === 'number') total += questionCounts.anatomy
+  if (typeof questionCounts.physiology === 'number') total += questionCounts.physiology
+  if (typeof questionCounts.pathology === 'number') total += questionCounts.pathology
+  if (typeof questionCounts.clinical_medicine_overview === 'number') total += questionCounts.clinical_medicine_overview
+  if (typeof questionCounts.clinical_medicine_detail === 'number') total += questionCounts.clinical_medicine_detail
+  if (typeof questionCounts.clinical_medicine_detail_total === 'number') total += questionCounts.clinical_medicine_detail_total
+  if (typeof questionCounts.rehabilitation === 'number') total += questionCounts.rehabilitation
+  if (typeof questionCounts.oriental_medicine_overview === 'number') total += questionCounts.oriental_medicine_overview
+  if (typeof questionCounts.meridian_points === 'number') total += questionCounts.meridian_points
+  if (typeof questionCounts.oriental_medicine_clinical === 'number') total += questionCounts.oriental_medicine_clinical
+  if (typeof questionCounts.oriental_medicine_clinical_general === 'number') total += questionCounts.oriental_medicine_clinical_general
+  if (typeof questionCounts.acupuncture_theory === 'number') total += questionCounts.acupuncture_theory
+  if (typeof questionCounts.moxibustion_theory === 'number') total += questionCounts.moxibustion_theory
+  
+  return total
 }
 
 export default function ResultsPage() {
@@ -186,8 +185,9 @@ export default function ResultsPage() {
 
         // 平均点を計算
         Object.entries(grouped).forEach(([key, group]) => {
-          const total = group.scores.reduce((sum: number, score: TestScore) => sum + score.total_score, 0)
-          group.average_score = Math.round((total / group.total_count) * 10) / 10
+          const typedGroup = group as GroupedTestScores[string]
+          const total = typedGroup.scores.reduce((sum: number, score: TestScore) => sum + score.total_score, 0)
+          typedGroup.average_score = Math.round((total / typedGroup.total_count) * 10) / 10
         })
 
         setGroupedScores(grouped)

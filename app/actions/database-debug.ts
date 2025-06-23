@@ -85,7 +85,7 @@ export async function getTableInfo(studentId?: string, testName?: string) {
     const uniqueStudentIds = [...new Set(studentIds?.map((item) => item.student_id) || [])]
 
     // テーブルのカラム名を取得（最初のデータから）
-    let columns = []
+    let columns: Array<{ column_name: string; data_type: string; is_nullable: string }> = []
     if (testData && testData.length > 0) {
       columns = Object.keys(testData[0]).map((key) => ({
         column_name: key,

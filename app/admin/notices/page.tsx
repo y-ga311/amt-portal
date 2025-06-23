@@ -168,7 +168,7 @@ export default function NoticesPage() {
           // 対象クラスの学生のメールアドレスを取得
           let query = supabase
             .from("students")
-            .select("id, mail")
+            .select("id, mail, hogosya_email")
             .not("mail", "is", null)
 
           // 特定のクラスが指定されている場合のみ、クラスでフィルタリング

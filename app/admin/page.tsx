@@ -13,17 +13,7 @@ import { Loader2 } from "lucide-react"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import crypto from 'crypto'
 import Image from 'next/image'
-
-interface Notice {
-  id: string
-  title: string
-  content: string
-  target_type: string
-  target_class: string
-  file_type: string | null
-  file_url: string | null
-  created_at: string
-}
+import { Notice } from "@/app/types/notice"
 
 // ハッシュ化の設定
 const FIXED_SALT = 'toyoiryo_admin_salt_2024'  // 固定のソルト
@@ -91,7 +81,7 @@ export default function AdminPage() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setNotices(data || [])
+      setNotices((data as Notice[]) || [])
     } catch (err) {
       console.error('お知らせの取得エラー:', err)
       setError('お知らせの取得に失敗しました')

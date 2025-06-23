@@ -10,19 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
 import { sendNoticeMail } from '@/app/utils/mail'
-
-interface Notice {
-  id: string
-  title: string
-  content: string
-  image_url: string | null
-  pdf_url: string | null
-  file_type: 'image' | 'pdf' | null
-  target_type: 'student' | 'parent' | 'all'
-  target_class: '昼1' | '昼2' | '昼3' | '夜1' | '夜2' | '夜3' | 'all'
-  created_at: string
-  updated_at: string
-}
+import { Notice } from "@/app/types/notice"
 
 export default function NoticesPage() {
   const router = useRouter()
@@ -31,7 +19,7 @@ export default function NoticesPage() {
   const [notices, setNotices] = useState<Notice[]>([])
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileType, setFileType] = useState<'image' | 'pdf' | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -267,7 +255,7 @@ export default function NoticesPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     console.log("削除ボタンがクリックされました", id)
     if (!confirm("このお知らせを削除してもよろしいですか？")) {
       return

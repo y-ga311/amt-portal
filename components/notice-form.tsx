@@ -16,8 +16,8 @@ interface NoticeFormProps {
 export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [targetType, setTargetType] = useState('all')
-  const [targetClass, setTargetClass] = useState('all')
+  const [targetType, setTargetType] = useState<'student' | 'parent' | 'all'>('all')
+  const [targetClass, setTargetClass] = useState<'昼1' | '昼2' | '昼3' | '夜1' | '夜2' | '夜3' | 'all'>('all')
   const [file, setFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -159,7 +159,8 @@ export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
             target_type: targetType,
             target_class: targetClass,
             file_type: fileType,
-            file_url: fileUrl
+            image_url: fileType === 'image' ? fileUrl : null,
+            pdf_url: fileType === 'pdf' ? fileUrl : null
           }
         ])
 
@@ -216,29 +217,32 @@ export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="targetType">対象</Label>
-        <Select value={targetType} onValueChange={setTargetType}>
+        <Select value={targetType} onValueChange={(value) => setTargetType(value as 'student' | 'parent' | 'all')}>
           <SelectTrigger>
             <SelectValue placeholder="対象を選択" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">全員</SelectItem>
-            <SelectItem value="students">生徒</SelectItem>
-            <SelectItem value="teachers">講師</SelectItem>
+            <SelectItem value="student">学生のみ</SelectItem>
+            <SelectItem value="parent">保護者のみ</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="targetClass">クラス</Label>
-        <Select value={targetClass} onValueChange={setTargetClass}>
+        <Select value={targetClass} onValueChange={(value) => setTargetClass(value as '昼1' | '昼2' | '昼3' | '夜1' | '夜2' | '夜3' | 'all')}>
           <SelectTrigger>
             <SelectValue placeholder="クラスを選択" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">全クラス</SelectItem>
-            <SelectItem value="a">Aクラス</SelectItem>
-            <SelectItem value="b">Bクラス</SelectItem>
-            <SelectItem value="c">Cクラス</SelectItem>
+            <SelectItem value="昼1">昼間部1年</SelectItem>
+            <SelectItem value="昼2">昼間部2年</SelectItem>
+            <SelectItem value="昼3">昼間部3年</SelectItem>
+            <SelectItem value="夜1">夜間部1年</SelectItem>
+            <SelectItem value="夜2">夜間部2年</SelectItem>
+            <SelectItem value="夜3">夜間部3年</SelectItem>
           </SelectContent>
         </Select>
       </div>

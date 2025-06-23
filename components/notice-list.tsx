@@ -5,23 +5,14 @@ import { Button } from "@/components/ui/button"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Loader2, Trash2 } from "lucide-react"
 import Image from 'next/image'
-
-interface Notice {
-  id: number
-  title: string
-  content: string
-  target_type: string
-  target_class: string
-  file_type: 'image' | 'pdf' | null
-  image_url: string | null
-  created_at: string
-}
+import { Notice } from "@/app/types/notice"
 
 interface NoticeListProps {
   notices: Notice[]
+  onNoticeDeleted?: () => void
 }
 
-export function NoticeList({ notices }: NoticeListProps) {
+export function NoticeList({ notices, onNoticeDeleted }: NoticeListProps) {
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [error, setError] = useState('')
   const supabase = createClientComponentClient()
@@ -44,8 +35,10 @@ export function NoticeList({ notices }: NoticeListProps) {
         throw new Error('お知らせの削除に失敗しました')
       }
 
-      // ページをリロードして一覧を更新
-      window.location.reload()
+      // コールバックを呼び出して一覧を更新
+      if (onNoticeDeleted) {
+        onNoticeDeleted()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'エラーが発生しました')
     } finally {
@@ -159,7 +152,7 @@ export function NoticeList({ notices }: NoticeListProps) {
             {notice.file_type === 'pdf' && (
               <div className="mt-2">
                 <a
-                  href={notice.image_url || '#'}
+                  href={notice.pdf_url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:underline text-sm"

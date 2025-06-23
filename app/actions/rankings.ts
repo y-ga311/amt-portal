@@ -414,7 +414,7 @@ export async function calculateStudentLevel(studentId: string | number) {
 
 // テストの基準値を取得する関数
 export async function getTestCriteria(testName: string) {
-  const supabase = createSupabaseClient()
+  const supabase = await createSupabaseClient()
 
   try {
     // 基準値データを取得

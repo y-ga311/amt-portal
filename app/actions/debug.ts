@@ -44,7 +44,7 @@ export async function checkDatabase() {
 
     // テーブル存在確認
     const tables = ["students", "test_scores"]
-    const tableResults = {}
+    const tableResults: Record<string, any> = {}
 
     for (const table of tables) {
       try {

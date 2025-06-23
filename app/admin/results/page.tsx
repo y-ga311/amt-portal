@@ -138,13 +138,13 @@ export default function ResultsPage() {
         
         // テスト結果を試験ごとにグループ化
         const grouped = data.data.reduce((acc: any, score: TestScore) => {
-          const key = `${score.test_name}_${score.test_date}`
-          if (!acc[key]) {
+          const key: string = `${score.test_name}_${score.test_date}`
+          if (!(acc as any)[key]) {
             // question_countsテーブルから最大点数を取得
             const questionCounts = questionCountsMap[score.test_name]
-            const maxScore = questionCounts ? calculateMaxScore(questionCounts) : 190 // フォールバック値
+            const maxScore: number = questionCounts ? calculateMaxScore(questionCounts) : 190 // フォールバック値
 
-            acc[key] = {
+            (acc as any)[key] = {
               test_name: score.test_name,
               test_date: score.test_date,
               scores: [],
@@ -155,11 +155,11 @@ export default function ResultsPage() {
               pass_score: Math.floor(maxScore * 0.6) // 60%を合格ラインとする
             }
           }
-          acc[key].scores.push(score)
-          acc[key].total_count++
+          (acc as any)[key].scores.push(score)
+          (acc as any)[key].total_count++
           // 正答率60%以上を合格とする
-          if (score.total_score >= acc[key].pass_score) {
-            acc[key].pass_count++
+          if (score.total_score >= (acc as any)[key].pass_score) {
+            (acc as any)[key].pass_count++
           }
           return acc
         }, {})

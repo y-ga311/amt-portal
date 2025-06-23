@@ -228,7 +228,7 @@ export async function importTestResults(results: any[]) {
     })
 
     // nullを除外
-    const validResults = formattedResults.filter((result: any) => result !== null)
+    const validResults = formattedResults.filter((result: any) => result !== null) as any[]
 
     if (validResults.length === 0) {
       return { success: false, error: "有効なデータがありません" }
@@ -252,7 +252,7 @@ export async function importTestResults(results: any[]) {
           .from("question_counts")
           .insert({
             test_name: testName,
-            test_date: validResults.find(r => r.test_name === testName)?.test_date || new Date().toISOString().split("T")[0],
+            test_date: validResults.find((r: any) => r.test_name === testName)?.test_date || new Date().toISOString().split("T")[0],
             medical_overview: 10,
             public_health: 10,
             related_laws: 10,
@@ -410,7 +410,7 @@ export async function importTestResultsFromCSV(csvData: string, testName: string
     })
 
     // nullを除外
-    const validResults = formattedResults.filter((result: any) => result !== null)
+    const validResults = formattedResults.filter((result: any) => result !== null) as any[]
 
     if (validResults.length === 0) {
       return { success: false, error: "有効なデータがありません" }
@@ -434,7 +434,7 @@ export async function importTestResultsFromCSV(csvData: string, testName: string
           .from("question_counts")
           .insert({
             test_name: testName,
-            test_date: validResults.find(r => r.test_name === testName)?.test_date || new Date().toISOString().split("T")[0],
+            test_date: validResults.find((r: any) => r.test_name === testName)?.test_date || new Date().toISOString().split("T")[0],
             medical_overview: 10,
             public_health: 10,
             related_laws: 10,

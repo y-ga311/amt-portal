@@ -174,21 +174,33 @@ export async function testStudentLogin(studentId: string, password: string) {
       { name: "IDとして検索", query: supabase.from("students").select("*").eq("id", studentId).maybeSingle() },
     ]
 
-    const results = await Promise.all(queries.map((q) => q.query.catch((err) => ({ error: err }))))
+    const results = await Promise.all(
+      queries.map(async (q) => {
+        try {
+          return await q.query
+        } catch (err) {
+          return { error: err }
+        }
+      })
+    )
 
-    const queryResults = queries.map((q, i) => ({
-      method: q.name,
-      success: !results[i].error && results[i].data !== null,
-      data: results[i].data
-        ? {
-            id: results[i].data.id,
-            student_id: results[i].data.student_id,
-            name: results[i].data.name,
-            password_matches: results[i].data.password === password,
-          }
-        : null,
-      error: results[i].error ? results[i].error.message : null,
-    }))
+    const queryResults = queries.map((q, i) => {
+      const result = results[i] as any
+      
+      return {
+        method: q.name,
+        success: !result.error && result.data !== null,
+        data: result.data
+          ? {
+              id: result.data.id,
+              student_id: result.data.student_id,
+              name: result.data.name,
+              password_matches: result.data.password === password,
+            }
+          : null,
+        error: result.error ? (result.error instanceof Error ? result.error.message : String(result.error)) : null,
+      }
+    })
 
     // 全データからの検証
     const { data: allStudents, error: allStudentsError } = await supabase.from("students").select("*").limit(10)

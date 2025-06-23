@@ -137,14 +137,12 @@ export default function ResultsPage() {
         }
         
         // テスト結果を試験ごとにグループ化
-        const grouped = data.data.reduce((acc: any, score: TestScore) => {
-          const key: string = `${score.test_name}_${score.test_date}`
-          if (!(acc as any)[key]) {
-            // question_countsテーブルから最大点数を取得
-            const questionCounts = questionCountsMap[score.test_name]
-            const maxScore: number = questionCounts ? calculateMaxScore(questionCounts) : 190 // フォールバック値
-
-            (acc as any)[key] = {
+        const grouped = (data.data as any[]).reduce((acc: any, score: any) => {
+          const key = `${score.test_name}_${score.test_date}`;
+          if (!acc[key]) {
+            const questionCounts = questionCountsMap[score.test_name];
+            const maxScore = questionCounts ? calculateMaxScore(questionCounts) : 190;
+            acc[key] = {
               test_name: score.test_name,
               test_date: score.test_date,
               scores: [],
@@ -152,20 +150,19 @@ export default function ResultsPage() {
               pass_count: 0,
               total_count: 0,
               max_score: maxScore,
-              pass_score: Math.floor(maxScore * 0.6) // 60%を合格ラインとする
-            }
+              pass_score: Math.floor(maxScore * 0.6)
+            };
           }
-          (acc as any)[key].scores.push(score)
-          (acc as any)[key].total_count++
-          // 正答率60%以上を合格とする
-          if (score.total_score >= (acc as any)[key].pass_score) {
-            (acc as any)[key].pass_count++
+          acc[key].scores.push(score);
+          acc[key].total_count++;
+          if (score.total_score >= acc[key].pass_score) {
+            acc[key].pass_count++;
           }
-          return acc
-        }, {})
+          return acc;
+        }, {} as any);
 
         // 平均点を計算
-        Object.entries(grouped).forEach((entry: [any, any]) => {
+        (Object.entries(grouped) as any).forEach((entry: any) => {
           const group = entry[1];
           const total = group.scores.reduce((sum: number, score: TestScore) => sum + score.total_score, 0)
           group.average_score = Math.round((total / group.total_count) * 10) / 10

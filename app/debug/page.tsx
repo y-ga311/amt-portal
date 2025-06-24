@@ -81,7 +81,7 @@ export default function DebugPage() {
                 <div className="mt-4">
                   <h3 className="font-semibold mb-2">環境変数の状態:</h3>
                   <ul className="list-disc pl-5 space-y-1">
-                    {Object.entries(envVars).map(([key, value]) => (
+                    {Object.entries(envVars as Record<string, string>).map(([key, value]) => (
                       <li key={key}>
                         {key}: <span className={value === "設定済み" ? "text-green-600" : "text-red-600"}>{value}</span>
                       </li>

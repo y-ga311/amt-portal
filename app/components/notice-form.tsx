@@ -13,7 +13,14 @@ import type { Notice } from '@/types/notice'
 
 interface NoticeFormProps {
   onNoticeCreated?: () => void
-  initialData?: Notice
+  initialData?: {
+    id: number
+    title: string
+    content: string
+    target_type: string
+    target_class: string
+    image_url: string | null
+  }
 }
 
 export function NoticeForm({ onNoticeCreated, initialData }: NoticeFormProps) {

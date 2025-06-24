@@ -98,7 +98,7 @@ export function NoticeList({ notices: initialNotices }: NoticeListProps) {
         <h3 className="text-lg font-semibold">お知らせを編集</h3>
         <NoticeForm
           initialData={editingNotice}
-          onSuccess={() => setEditingNotice(null)}
+          onNoticeCreated={() => setEditingNotice(null)}
         />
         <Button
           variant="outline"

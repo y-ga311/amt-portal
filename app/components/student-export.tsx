@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { Student } from "./student-import"
+import type { Student } from "@/types/student"
 
 export type StudentExportProps = {
   students: Student[]

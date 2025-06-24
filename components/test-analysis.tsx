@@ -377,7 +377,7 @@ export function TestAnalysis({ testScore, allScores = [] }: TestAnalysisProps) {
                       fillOpacity={0.6}
                       isAnimationActive={true}
                     />
-                    <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, "得点率"]} />
+                    <Tooltip formatter={(value) => [`${(value as number).toFixed(1)}%`, "得点率"]} />
                     <Legend />
                   </RadarChart>
                 </ResponsiveContainer>

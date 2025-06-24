@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Loader2, Trash2 } from "lucide-react"
 import Image from 'next/image'
-import { Notice } from "@/app/types/notice"
+import { Notice } from "@/types/notice"
 
 interface NoticeListProps {
   notices: Notice[]

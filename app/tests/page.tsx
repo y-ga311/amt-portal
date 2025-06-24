@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CharacterIcon } from "@/components/character-icon"
@@ -60,7 +60,7 @@ const getGradeColor = (testName: string): string => {
   return "bg-[#8B4513]" // 全ての試験を茶色に統一
 }
 
-export default function TestsPage() {
+function TestsContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [tests, setTests] = useState<TestData[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -413,5 +413,13 @@ export default function TestsPage() {
         </Card>
       </div>
     </main>
+  )
+}
+
+export default function TestsPage() {
+  return (
+    <Suspense fallback={<CharacterLoading message="テスト情報を読み込んでいます..." />}>
+      <TestsContent />
+    </Suspense>
   )
 }

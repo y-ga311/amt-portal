@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CharacterIcon } from "@/components/character-icon"
@@ -15,8 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Image from "next/image"
 
-
-export default function DashboardPage() {
+function DashboardContent() {
   const [studentId, setStudentId] = useState("")
   const [studentName, setStudentName] = useState("")
   const [isLoading, setIsLoading] = useState(true)
@@ -50,7 +49,6 @@ export default function DashboardPage() {
     percentage: number;
   }>>([])
   const [newEmail, setNewEmail] = useState("")
-
 
   // お知らせを取得する関数
   const fetchNotices = useCallback(async (currentUserType?: string, currentStudentClass?: string) => {
@@ -113,7 +111,6 @@ export default function DashboardPage() {
     }
   }, [supabase, toast])
 
-
   // 初期化処理
   const initializeDashboard = async () => {
     try {
@@ -170,7 +167,6 @@ export default function DashboardPage() {
     }
   }
 
-
   // メールアドレスを更新する関数
   const handleEmailUpdate = async () => {
     try {
@@ -182,7 +178,6 @@ export default function DashboardPage() {
         })
         return
       }
-
 
       // セッションストレージからユーザー情報を取得
       const userInfoStr = sessionStorage.getItem('user')
@@ -196,10 +191,8 @@ export default function DashboardPage() {
         return
       }
 
-
       const userInfo = JSON.parse(userInfoStr)
       console.log('メールアドレス更新 - ユーザー情報:', userInfo)
-
 
       if (!userInfo.id) {
         console.error('ユーザーIDが見つかりません')
@@ -211,13 +204,11 @@ export default function DashboardPage() {
         return
       }
 
-
       // メールアドレスの更新
       const { error: updateError } = await supabase
         .from('students')
         .update({ mail: newEmail })
         .eq('id', userInfo.id)
-
 
       if (updateError) {
         console.error('メールアドレス更新エラー:', updateError)
@@ -228,7 +219,6 @@ export default function DashboardPage() {
         })
         return
       }
-
 
       // 更新成功時の処理
       setEmail(newEmail)
@@ -251,11 +241,9 @@ export default function DashboardPage() {
     }
   }
 
-
   useEffect(() => {
     initializeDashboard()
   }, [router])
-
 
   const handleLogout = async () => {
     try {
@@ -274,7 +262,6 @@ export default function DashboardPage() {
     }
   }
 
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -285,7 +272,6 @@ export default function DashboardPage() {
       </div>
     )
   }
-
 
   return (
     <div className="min-h-screen flex flex-col bg-brown-50 dark:bg-brown-950">
@@ -353,7 +339,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-
           <Card className="border-brown-200 dark:border-brown-800">
             <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg">
               <div className="flex items-center gap-3">
@@ -391,7 +376,6 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
 
-
                 <Card className="border-brown-200 dark:border-brown-800">
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
                     <CardTitle className="text-lg text-brown-800 dark:text-brown-100">模擬試験日程</CardTitle>
@@ -409,7 +393,6 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
 
-
                 <Card className="border-brown-200 dark:border-brown-800">
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
                     <CardTitle className="text-lg text-brown-800 dark:text-brown-100">模擬試験成績</CardTitle>
@@ -426,7 +409,6 @@ export default function DashboardPage() {
                     </Button>
                   </CardContent>
                 </Card>
-
 
                 <Card className="border-brown-200 dark:border-brown-800">
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
@@ -447,7 +429,6 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
 
-
                 <Card className="border-brown-200 dark:border-brown-800">
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
                     <CardTitle className="text-lg text-brown-800 dark:text-brown-100">ハロハロ通信(同窓会サイト)</CardTitle>
@@ -464,7 +445,6 @@ export default function DashboardPage() {
                     </Button>
                   </CardContent>
                 </Card>
-
 
                 <Card className="border-brown-200 dark:border-brown-800">
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
@@ -485,7 +465,6 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-
 
           {/* 保護者専用のメールアドレス登録・変更カード（最下部に移動） */}
           {userType === 'parent' && (
@@ -517,7 +496,6 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
-
 
       {/* メールアドレス入力モーダル */}
       <Dialog open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen}>
@@ -558,5 +536,13 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   )
 }

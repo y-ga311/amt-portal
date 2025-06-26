@@ -8,6 +8,7 @@ import { CharacterIcon } from "@/components/character-icon"
 import Link from "next/link"
 import { ChevronLeft, AlertCircle, Database, RefreshCw, Plus } from "lucide-react"
 import StudentImport from "@/app/components/student-import"
+import StudentExport from "@/app/components/student-export"
 import type { Student } from "@/types/student"
 import StudentList from "@/app/components/student-list"
 import { useToast } from "@/hooks/use-toast"
@@ -494,7 +495,6 @@ export default function StudentsPage() {
                     students={students}
                     onEdit={handleEdit}
                     onDelete={handleDeleteStudent}
-                    onAdd={handleAddStudent}
                   />
               </CardContent>
             </Card>
@@ -517,9 +517,6 @@ export default function StudentsPage() {
                   <div className="grid gap-6">
                     <div className="border-b border-brown-200 dark:border-brown-800 pb-4">
                       <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold text-brown-800 dark:text-brown-200">
-                          データインポート
-                        </h3>
                         <Button
                           onClick={() => setIsAddDialogOpen(true)}
                           className="bg-brown-600 hover:bg-brown-700 text-white"
@@ -528,41 +525,12 @@ export default function StudentsPage() {
                           新規登録
                         </Button>
                       </div>
-                      <p className="text-sm text-brown-600 dark:text-brown-400 mb-4">
-                        CSVファイルから学生データを一括でインポートします。
-                      </p>
                       <StudentImport onImportSuccess={handleStudentImportSuccess} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-brown-800 dark:text-brown-200 mb-2">
-                        データエクスポート
-                      </h3>
-                      <p className="text-sm text-brown-600 dark:text-brown-400 mb-4">
-                        現在の学生データをCSVファイルとしてエクスポートします。
-                      </p>
-                      <Button
-                        variant="outline"
-                        className="border-brown-300 text-brown-700 hover:bg-brown-100 dark:border-brown-700 dark:text-brown-200 dark:hover:bg-brown-800"
-                        onClick={() => {
-                          // エクスポート機能の実装
-                          const csvContent = "data:text/csv;charset=utf-8," + 
-                            "id,name,gakusei_id,gakusei_password,hogosya_id,hogosya_pass,hogosya_email,class\n" +
-                            students.map(student => 
-                              `${student.id},${student.name},${student.gakusei_id},${student.gakusei_password},${student.hogosya_id},${student.hogosya_pass},${student.hogosya_email || ''},${student.class}`
-                            ).join("\n");
-                          const encodedUri = encodeURI(csvContent);
-                          const link = document.createElement("a");
-                          link.setAttribute("href", encodedUri);
-                          link.setAttribute("download", `students_${new Date().toISOString().split('T')[0]}.csv`);
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
-                      >
-                        CSVエクスポート
-                      </Button>
+                      <StudentExport students={students} />
                     </div>
-          </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

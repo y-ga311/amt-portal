@@ -13,11 +13,16 @@ export default function StudentExport({ students }: StudentExportProps) {
 
   const handleExport = () => {
     try {
-      const headers = ["student_id", "name", "password"]
+      const headers = ["id", "name", "gakusei_id", "gakusei_password", "hogosya_id", "hogosya_pass", "hogosya_email", "class"]
       const csvData = students.map(student => [
-        student.gakusei_id,
+        student.id,
         student.name,
-        student.gakusei_password
+        student.gakusei_id,
+        student.gakusei_password,
+        student.hogosya_id,
+        student.hogosya_pass,
+        student.hogosya_email || '',
+        student.class
       ])
 
       const csvContent = [

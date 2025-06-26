@@ -33,7 +33,7 @@ export default function StudentList({ students, onEdit, onDelete, onAdd }: Stude
   const filteredStudents = students.filter((student) => {
     const searchLower = searchTerm.toLowerCase()
     return (
-      student.id.toLowerCase().includes(searchLower) ||
+      student.id.toString().toLowerCase().includes(searchLower) ||
       student.name.toLowerCase().includes(searchLower) ||
       student.gakusei_id.toLowerCase().includes(searchLower) ||
       student.class?.toLowerCase().includes(searchLower) ||

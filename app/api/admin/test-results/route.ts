@@ -42,11 +42,22 @@ export async function GET() {
       )
     }
 
+    console.log("取得したテスト結果:", {
+      count: testScores?.length || 0,
+      data: testScores,
+      isArray: Array.isArray(testScores)
+    })
+
     // 学生名を追加
     const scoresWithStudentName = testScores.map((score) => ({
       ...score,
       student_name: score.students?.name || "不明",
     }))
+
+    console.log("処理後のテスト結果:", {
+      count: scoresWithStudentName?.length || 0,
+      isArray: Array.isArray(scoresWithStudentName)
+    })
 
     return NextResponse.json({ success: true, data: scoresWithStudentName })
   } catch (error) {

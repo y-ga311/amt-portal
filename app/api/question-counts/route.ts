@@ -9,7 +9,8 @@ export async function GET(request: Request) {
 
     console.log("問題数取得API: テスト名", testName)
 
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = cookies()
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
 
     // question_countsテーブルからデータを取得
     console.log("データベースクエリ実行:", testName)
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
     // 複数のデータが見つかった場合は最初のデータを使用
     const questionCountData = data[0]
 
-    // データの検証
+    // データの検証（必須フィールドが不足している場合は警告のみで処理を続行）
     const requiredFields = [
       "medical_overview",
       "public_health",
@@ -71,18 +72,14 @@ export async function GET(request: Request) {
 
     const missingFields = requiredFields.filter(field => questionCountData[field] === null || questionCountData[field] === undefined)
     if (missingFields.length > 0) {
-      console.error("必須フィールドが不足しています:", missingFields)
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "問題数データが不完全です",
-          details: {
-            missingFields,
-            data: questionCountData
-          }
-        },
-        { status: 400 }
-      )
+      console.warn("一部のフィールドが不足しています:", missingFields)
+      // 400エラーではなく、警告付きでデータを返す
+      console.log("問題数データ取得成功（一部フィールド不足）:", questionCountData)
+      return NextResponse.json({ 
+        success: true, 
+        data: questionCountData,
+        warning: `以下のフィールドが不足しています: ${missingFields.join(", ")}`
+      })
     }
 
     console.log("問題数データ取得成功:", questionCountData)

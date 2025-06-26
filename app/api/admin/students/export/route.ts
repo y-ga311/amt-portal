@@ -4,7 +4,8 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = cookies()
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
 
     // 学生データを取得
     const { data: students, error } = await supabase

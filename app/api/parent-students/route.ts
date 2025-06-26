@@ -4,7 +4,8 @@ import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = cookies()
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     const { parent_id, student_id } = await request.json()
 
     // 保護者と学生の関連付けを作成
@@ -38,7 +39,8 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = cookies()
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     const { searchParams } = new URL(request.url)
     const parent_id = searchParams.get('parent_id')
 

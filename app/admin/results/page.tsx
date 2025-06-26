@@ -102,21 +102,23 @@ const calculateMaxScore = (questionCounts: QuestionCounts) => {
 }
 
 export default function ResultsPage() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [testScores, setTestScores] = useState<TestScore[]>([])
-  const [groupedScores, setGroupedScores] = useState<GroupedTestScores>({})
-  const [error, setError] = useState<string | null>(null)
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
-  const [importTestName, setImportTestName] = useState("")
-  const [importTestDate, setImportTestDate] = useState("")
-  const [importFile, setImportFile] = useState<File | null>(null)
-  const [isImporting, setIsImporting] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  const [testScores, setTestScores] = useState<TestScore[]>([])
+  const [groupedScores, setGroupedScores] = useState<GroupedTestScores>({} as GroupedTestScores)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedTest, setSelectedTest] = useState<string | null>(null)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importTestName, setImportTestName] = useState("")
+  const [importTestDate, setImportTestDate] = useState("")
+  const [isImporting, setIsImporting] = useState(false)
+  const [isFetching, setIsFetching] = useState(false) // 重複実行防止フラグ
 
   useEffect(() => {
-    // 管理者ログイン状態を確認
     const adminLoggedIn = localStorage.getItem("adminLoggedIn")
 
     if (adminLoggedIn !== "true") {
@@ -125,9 +127,15 @@ export default function ResultsPage() {
     }
 
     fetchTestScores()
-  }, [router])
+  }, [])
 
   const fetchTestScores = async () => {
+    // 重複実行を防ぐ
+    if (isFetching) {
+      return
+    }
+    
+    setIsFetching(true)
     setIsLoading(true)
     setError(null)
     try {
@@ -135,38 +143,52 @@ export default function ResultsPage() {
       const data = await response.json()
 
       if (data.success) {
+        // データが配列であることを確認
+        if (!Array.isArray(data.data)) {
+          throw new Error("テスト結果データの形式が正しくありません")
+        }
+
         setTestScores(data.data)
         
         // テスト名の一覧を取得
         const testNames = [...new Set(data.data.map((score: TestScore) => score.test_name))] as string[]
         
-        // question_countsテーブルから問題数データを取得
-        const questionCountsResponse = await fetch("/api/question-counts")
-        const questionCountsData = await questionCountsResponse.json()
+        // 問題数データを取得
+        const questionCountsMap: { [key: string]: QuestionCounts } = {}
         
-        let questionCountsMap: { [key: string]: QuestionCounts } = {}
-        
-        if (questionCountsData.success) {
-          // 複数のテスト名に対応するため、各テスト名で問題数データを取得
-          for (const testName of testNames) {
-            const response = await fetch(`/api/question-counts?testName=${encodeURIComponent(testName as string)}`)
-            const result = await response.json()
-            if (result.success && result.data) {
-              questionCountsMap[testName] = result.data as QuestionCounts
+        for (const testName of testNames) {
+          try {
+            const questionCountsResponse = await fetch(`/api/question-counts?testName=${encodeURIComponent(testName)}`)
+            const questionCountsData = await questionCountsResponse.json()
+            
+            if (questionCountsData.success && questionCountsData.data) {
+              questionCountsMap[testName] = questionCountsData.data as QuestionCounts
             }
+          } catch (error) {
+            console.error(`問題数データ取得エラー (${testName}):`, error)
+            // エラーが発生しても処理を続行
           }
         }
         
         // テスト結果を試験ごとにグループ化
         let grouped: GroupedTestScores = {} as GroupedTestScores
-        grouped = data.data.reduce((acc: GroupedTestScores, score: TestScore) => {
+        
+        // data.dataを確実に配列に変換（完全に新しい配列を作成）
+        const testScoresArray = JSON.parse(JSON.stringify(data.data))
+        
+        // forループを使用してテスト結果をグループ化
+        grouped = {} as GroupedTestScores
+        
+        for (let i = 0; i < testScoresArray.length; i++) {
+          const score = testScoresArray[i] as TestScore
           const key = `${score.test_name}_${score.test_date}`
-          if (!acc[key]) {
+          
+          if (!grouped[key]) {
             // question_countsテーブルから最大点数を取得
             const questionCounts = questionCountsMap[score.test_name]
             const maxScore = questionCounts ? calculateMaxScore(questionCounts) : 190 // フォールバック値
 
-            acc[key] = {
+            grouped[key] = {
               test_name: score.test_name,
               test_date: score.test_date,
               scores: [],
@@ -177,21 +199,28 @@ export default function ResultsPage() {
               pass_score: Math.floor(maxScore * 0.6) // 60%を合格ラインとする
             }
           }
-          acc[key].scores.push(score)
-          acc[key].total_count++
+          
+          grouped[key].scores.push(score)
+          grouped[key].total_count++
           // 正答率60%以上を合格とする
-          if (score.total_score >= acc[key].pass_score) {
-            acc[key].pass_count++
+          if (score.total_score >= grouped[key].pass_score) {
+            grouped[key].pass_count++
           }
-          return acc
-        }, {} as GroupedTestScores)
+        }
 
         // 平均点を計算
-        (Object.entries(grouped) as any).forEach(([key, group]: any) => {
+        const groupedEntries = Object.entries(grouped)
+        for (let i = 0; i < groupedEntries.length; i++) {
+          const [key, group] = groupedEntries[i]
           const typedGroup = group as GroupedTestScores[string]
-          const total = typedGroup.scores.reduce((sum: number, score: TestScore) => sum + score.total_score, 0)
+          
+          let total = 0
+          for (let j = 0; j < typedGroup.scores.length; j++) {
+            total += typedGroup.scores[j].total_score
+          }
+          
           typedGroup.average_score = Math.round((total / typedGroup.total_count) * 10) / 10
-        })
+        }
 
         setGroupedScores(grouped)
       } else {
@@ -208,6 +237,7 @@ export default function ResultsPage() {
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)
+      setIsFetching(false) // フラグをリセット
     }
   }
 

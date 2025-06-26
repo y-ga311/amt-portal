@@ -17,10 +17,10 @@ const transporter = nodemailer.createTransport({
 export async function POST(request: Request) {
   try {
     console.log('メール送信API開始')
-    console.log('環境変数:', {
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      user: process.env.SMTP_USER,
+    console.log('環境変数確認:', {
+      host: process.env.SMTP_HOST || '未設定',
+      port: process.env.SMTP_PORT || '未設定',
+      user: process.env.SMTP_USER || '未設定',
       pass: process.env.SMTP_PASS ? '設定済み' : '未設定'
     })
 
@@ -35,16 +35,21 @@ export async function POST(request: Request) {
       )
     }
 
-    // 環境変数の確認
-    if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      console.error('SMTP設定が不足しています:', {
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS ? '設定済み' : '未設定'
-      })
+    // 環境変数の詳細確認
+    const missingVars = []
+    if (!process.env.SMTP_HOST) missingVars.push('SMTP_HOST')
+    if (!process.env.SMTP_PORT) missingVars.push('SMTP_PORT')
+    if (!process.env.SMTP_USER) missingVars.push('SMTP_USER')
+    if (!process.env.SMTP_PASS) missingVars.push('SMTP_PASS')
+
+    if (missingVars.length > 0) {
+      console.error('SMTP設定が不足しています:', missingVars)
       return NextResponse.json(
-        { success: false, error: 'メールサーバーの設定が不足しています' },
+        { 
+          success: false, 
+          error: `メールサーバーの設定が不足しています: ${missingVars.join(', ')}`,
+          details: '環境変数ファイル(.env.local)にSMTP設定を追加してください'
+        },
         { status: 500 }
       )
     }
@@ -90,7 +95,11 @@ export async function POST(request: Request) {
       })
     }
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'メール送信に失敗しました' },
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'メール送信に失敗しました',
+        details: '環境変数の設定またはSMTPサーバーの接続を確認してください'
+      },
       { status: 500 }
     )
   }

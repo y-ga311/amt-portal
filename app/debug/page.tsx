@@ -293,7 +293,7 @@ export default function DebugPage() {
                       variant={
                         loginTestResults.recommendation.includes("成功")
                           ? "default"
-                          : "destructive"
+                            : "destructive"
                       }
                     >
                       <AlertTitle>診断結果</AlertTitle>

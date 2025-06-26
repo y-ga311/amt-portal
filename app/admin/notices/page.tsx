@@ -156,7 +156,7 @@ export default function NoticesPage() {
           // 対象クラスの学生のメールアドレスを取得
           let query = supabase
             .from("students")
-            .select("id, mail, hogosya_email")
+            .select("id, mail")
             .not("mail", "is", null)
 
           // 特定のクラスが指定されている場合のみ、クラスでフィルタリング
@@ -183,19 +183,6 @@ export default function NoticesPage() {
                   console.log("学生メール送信開始:", student.mail)
                   const { success, error } = await sendNoticeMail(data, student.mail)
                   console.log("学生メール送信結果:", { success, error })
-                  
-                  if (success) {
-                    successCount++
-                  } else {
-                    failCount++
-                  }
-                }
-
-                // 対象者が「全員」の場合、保護者メールアドレスにも送信
-                if (data.target_type === 'all' && student.hogosya_email) {
-                  console.log("保護者メール送信開始:", student.hogosya_email)
-                  const { success, error } = await sendNoticeMail(data, student.hogosya_email)
-                  console.log("保護者メール送信結果:", { success, error })
                   
                   if (success) {
                     successCount++

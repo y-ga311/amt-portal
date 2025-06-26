@@ -39,6 +39,11 @@ export async function sendNoticeMail(notice: any, to: string) {
       <div style="margin: 20px 0; padding: 20px; background-color: #f5f5f5; border-radius: 5px;">
         ${notice.content}
       </div>
+      
+      <p style="color: #333; font-size: 14px; margin: 20px 0;">
+        詳細については、<a href="https://amt-portal.vercel.app/" style="color: #0066cc; text-decoration: underline;">AMTつながるポータル</a>からご確認ください。
+      </p>
+      
       <p style="color: #666; font-size: 12px;">
         本メールは送信専用のアドレスから自動配信されています。ご返信いただいても対応いたしかねますのでご了承ください。
       </p>

@@ -188,16 +188,16 @@ export async function testStudentLogin(studentId: string, password: string) {
       const result = results[i] as any
       
       return {
-        method: q.name,
+      method: q.name,
         success: !result.error && result.data !== null,
         data: result.data
-          ? {
+        ? {
               id: result.data.id,
               student_id: result.data.student_id,
               name: result.data.name,
               password_matches: result.data.password === password,
-            }
-          : null,
+          }
+        : null,
         error: result.error ? (result.error instanceof Error ? result.error.message : String(result.error)) : null,
       }
     })

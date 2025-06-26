@@ -23,6 +23,8 @@ export default function NoticesPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileType, setFileType] = useState<'image' | 'pdf' | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isSendingMail, setIsSendingMail] = useState(false)
+  const [mailProgress, setMailProgress] = useState({ current: 0, total: 0 })
   const [targetType, setTargetType] = useState<'student' | 'parent' | 'all'>('all')
   const [targetClass, setTargetClass] = useState<'昼1' | '昼2' | '昼3' | '夜1' | '夜2' | '夜3' | 'all'>('all')
 
@@ -152,6 +154,8 @@ export default function NoticesPage() {
         // メール送信処理
         if (data && (data.target_type === 'all' || data.target_type === 'parent')) {
           console.log("メール送信処理開始")
+          setIsSendingMail(true)
+          setMailProgress({ current: 0, total: 0 }) // 初期化
           
           // 対象クラスの学生のメールアドレスを取得
           let query = supabase
@@ -168,40 +172,75 @@ export default function NoticesPage() {
 
           if (studentsError) {
             console.error("学生メール取得エラー:", studentsError)
-            alert("メール送信に失敗しました: 学生データの取得に失敗しました")
+            toast({
+              title: "警告",
+              description: "メール送信に失敗しました: 学生データの取得に失敗しました",
+              variant: "destructive",
+            })
+            setIsSendingMail(false)
+            setMailProgress({ current: 0, total: 0 })
           } else {
             console.log("対象学生:", students)
             
             if (students && students.length > 0) {
               let successCount = 0
               let failCount = 0
+              const studentsWithMail = students.filter(s => s.mail)
+              const totalStudents = studentsWithMail.length
+              
+              if (totalStudents === 0) {
+                console.log("メールアドレスを持つ学生が見つかりません")
+                toast({
+                  title: "警告",
+                  description: "メールアドレスを持つ学生が見つかりませんでした",
+                  variant: "destructive",
+                })
+                setIsSendingMail(false)
+                setMailProgress({ current: 0, total: 0 })
+                return
+              }
+              
+              setMailProgress({ current: 0, total: totalStudents })
 
               // 各学生にメールを送信
-              for (const student of students) {
-                // 学生のメールアドレスに送信
-                if (student.mail) {
-                  console.log("学生メール送信開始:", student.mail)
-                  const { success, error } = await sendNoticeMail(data, student.mail)
-                  console.log("学生メール送信結果:", { success, error })
-                  
-                  if (success) {
-                    successCount++
-                  } else {
-                    failCount++
-                  }
+              for (let i = 0; i < studentsWithMail.length; i++) {
+                const student = studentsWithMail[i]
+                console.log("学生メール送信開始:", student.mail)
+                setMailProgress({ current: i + 1, total: totalStudents })
+                
+                const { success, error } = await sendNoticeMail(data, student.mail)
+                console.log("学生メール送信結果:", { success, error, studentId: student.id, email: student.mail })
+                
+                if (success) {
+                  successCount++
+                } else {
+                  failCount++
                 }
               }
 
-              // 送信結果を表示
+              // 送信結果を通知
               if (successCount > 0) {
-                alert(`${successCount}件のメールを送信しました${failCount > 0 ? `\n${failCount}件の送信に失敗しました` : ''}`)
-              } else {
-                alert("メールの送信に失敗しました")
+                toast({
+                  title: "メール送信完了",
+                  description: `${successCount}件のメールを送信しました${failCount > 0 ? `（${failCount}件失敗）` : ''}`,
+                })
+              } else if (failCount > 0) {
+                toast({
+                  title: "メール送信失敗",
+                  description: `${failCount}件のメール送信に失敗しました`,
+                  variant: "destructive",
+                })
               }
             } else {
               console.log("送信対象の学生が見つかりません")
-              alert("送信対象の学生が見つかりません")
+              toast({
+                title: "警告",
+                description: "送信対象の学生が見つかりませんでした",
+                variant: "destructive",
+              })
             }
+            setIsSendingMail(false)
+            setMailProgress({ current: 0, total: 0 })
           }
         }
       }
@@ -275,6 +314,39 @@ export default function NoticesPage() {
   return (
     <div className="min-h-screen flex flex-col bg-brown-50 dark:bg-brown-950">
       <Header subtitle="お知らせ管理" />
+      
+      {/* メール送信中のローディングオーバーレイ */}
+      {isSendingMail && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">メール送信中...</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {mailProgress.total > 0 ? (
+                  `${mailProgress.current} / ${mailProgress.total} 件送信中`
+                ) : (
+                  "送信準備中..."
+                )}
+              </p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: mailProgress.total > 0 
+                      ? `${Math.min((mailProgress.current / mailProgress.total) * 100, 100)}%` 
+                      : '0%' 
+                  }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500">
+                処理中です。画面を閉じないでください。
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 container mx-auto p-4">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-brown-800 dark:text-brown-100">
@@ -387,9 +459,9 @@ export default function NoticesPage() {
                   <Button
                     type="submit"
                     className="bg-brown-600 hover:bg-brown-700 text-white"
-                    disabled={isUploading}
+                    disabled={isUploading || isSendingMail}
                   >
-                    {isUploading ? "アップロード中..." : "作成"}
+                    {isUploading ? "アップロード中..." : isSendingMail ? "送信中..." : editingId ? "更新" : "作成"}
                   </Button>
                 </div>
               </form>
@@ -591,9 +663,9 @@ export default function NoticesPage() {
                     <Button
                       type="submit"
                       className="bg-brown-600 hover:bg-brown-700 text-white"
-                      disabled={isUploading}
+                      disabled={isUploading || isSendingMail}
                     >
-                      {isUploading ? "アップロード中..." : "更新"}
+                      {isUploading ? "アップロード中..." : isSendingMail ? "送信中..." : editingId ? "更新" : "作成"}
                     </Button>
                   </div>
                 </form>

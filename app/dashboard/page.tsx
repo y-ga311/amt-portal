@@ -350,15 +350,16 @@ function DashboardContent() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="bg-white dark:bg-brown-900 rounded-b-lg p-4 sm:p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <CardContent className="bg-white dark:bg-brown-900 rounded-b-lg p-3 sm:p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <Card className="border-brown-200 dark:border-brown-800">
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
                     <CardTitle className="text-lg text-brown-800 dark:text-brown-100">出欠・学期成績</CardTitle>
                   </CardHeader>
-                  <CardContent className="bg-white dark:bg-brown-900 pt-4">
-                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-4">
-                      出欠状況と学期ごとの各科目の成績が確認できます。
+                  <CardContent className="bg-white dark:bg-brown-900 pt-3 pb-3">
+                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-2 leading-relaxed">
+                      出欠状況と学期ごとの各科目の成績をご確認いただけます。
+                      ※出欠状況の反映はシステム上の都合により<strong>約2週間ごと</strong>に更新されます。
                     </p>
                     <Button asChild className="w-full bg-brown-600 hover:bg-brown-700 text-white">
                       <a 
@@ -380,10 +381,14 @@ function DashboardContent() {
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
                     <CardTitle className="text-lg text-brown-800 dark:text-brown-100">模擬試験日程</CardTitle>
                   </CardHeader>
-                  <CardContent className="bg-white dark:bg-brown-900 pt-4">
-                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-4">
+                  <CardContent className="bg-white dark:bg-brown-900 pt-3 pb-3">
+                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-2 leading-relaxed">
                       模擬試験の日程を確認することができます。
                     </p>
+                    <div className="hidden md:block">
+                      <br />
+                      <br />
+                    </div>
                     <Button asChild className="w-full bg-brown-600 hover:bg-brown-700 text-white">
                       <Link href={`/tests?studentId=${studentId}&userType=${userType}&studentName=${studentName}&studentClass=${studentClass}`}>
                         <Calendar className="mr-2 h-4 w-4" />
@@ -397,8 +402,8 @@ function DashboardContent() {
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
                     <CardTitle className="text-lg text-brown-800 dark:text-brown-100">模擬試験成績</CardTitle>
                   </CardHeader>
-                  <CardContent className="bg-white dark:bg-brown-900 pt-4">
-                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-4">
+                  <CardContent className="bg-white dark:bg-brown-900 pt-3 pb-3">
+                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-2 leading-relaxed">
                       各模擬試験の成績を確認することができます。
                     </p>
                     <Button asChild className="w-full bg-brown-600 hover:bg-brown-700 text-white">
@@ -412,11 +417,11 @@ function DashboardContent() {
 
                 <Card className="border-brown-200 dark:border-brown-800">
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
-                    <CardTitle className="text-lg text-brown-800 dark:text-brown-100">成績分析</CardTitle>
+                    <CardTitle className="text-lg text-brown-800 dark:text-brown-100">成績推移</CardTitle>
                   </CardHeader>
-                  <CardContent className="bg-white dark:bg-brown-900 pt-4">
-                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-4">
-                      これまでの模擬試験の成績分析が確認できます。
+                  <CardContent className="bg-white dark:bg-brown-900 pt-3 pb-3">
+                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-2 leading-relaxed">
+                      これまでの模擬試験の成績推移が確認できます。
                     </p>
                     <Button asChild className="w-full bg-brown-600 hover:bg-brown-700 text-white">
                       <Link 
@@ -433,8 +438,8 @@ function DashboardContent() {
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
                     <CardTitle className="text-lg text-brown-800 dark:text-brown-100">ハロハロ通信(同窓会サイト)</CardTitle>
                   </CardHeader>
-                  <CardContent className="bg-white dark:bg-brown-900 pt-4">
-                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-4">
+                  <CardContent className="bg-white dark:bg-brown-900 pt-3 pb-3">
+                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-2 leading-relaxed">
                       学校生活についてお届け中です。学生記事もあります。
                     </p>
                     <Button asChild className="w-full bg-brown-600 hover:bg-brown-700 text-white">
@@ -450,8 +455,8 @@ function DashboardContent() {
                   <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg pb-2">
                     <CardTitle className="text-lg text-brown-800 dark:text-brown-100">附属鍼灸院予約</CardTitle>
                   </CardHeader>
-                  <CardContent className="bg-white dark:bg-brown-900 pt-4">
-                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-4">
+                  <CardContent className="bg-white dark:bg-brown-900 pt-3 pb-3">
+                    <p className="text-sm text-brown-600 dark:text-brown-300 mb-2 leading-relaxed">
                       学校の附属鍼灸院の予約ができます。
                     </p>
                     <Button asChild className="w-full bg-brown-600 hover:bg-brown-700 text-white">

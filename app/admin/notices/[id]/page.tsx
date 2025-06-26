@@ -165,16 +165,16 @@ function EditNoticeClient({ params }: { params: { id: string } }) {
           <label className="block text-sm font-medium text-gray-700">対象クラス</label>
           <select
             value={notice.target_class}
-            onChange={(e) => setNotice({ ...notice, target_class: e.target.value as '昼1' | '昼2' | '昼3' | '夜1' | '夜2' | '夜3' | 'all' })}
+            onChange={(e) => setNotice({ ...notice, target_class: e.target.value as '22期生昼間部' | '22期生夜間部' | '23期生昼間部' | '23期生夜間部' | '24期生昼間部' | '24期生夜間部' | 'all' })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
             <option value="all">全クラス</option>
-            <option value="昼1">昼間部1年</option>
-            <option value="昼2">昼間部2年</option>
-            <option value="昼3">昼間部3年</option>
-            <option value="夜1">夜間部1年</option>
-            <option value="夜2">夜間部2年</option>
-            <option value="夜3">夜間部3年</option>
+            <option value="24期生昼間部">24期生昼間部</option>
+            <option value="24期生夜間部">24期生夜間部</option>
+            <option value="23期生昼間部">23期生昼間部</option>
+            <option value="23期生夜間部">23期生夜間部</option>
+            <option value="22期生昼間部">22期生昼間部</option>
+            <option value="22期生夜間部">22期生夜間部</option>
           </select>
         </div>
 

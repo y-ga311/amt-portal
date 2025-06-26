@@ -8,20 +8,42 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Loader2 } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import { Upload } from "lucide-react"
 
 interface NoticeFormProps {
   onNoticeCreated: () => void
 }
 
+// 期生の型定義を動的に生成
+type PeriodType = '22期生' | '23期生' | '24期生' | '25期生' | '26期生' | '27期生' | '28期生' | '29期生' | '30期生'
+type ClassType = `${PeriodType}昼間部` | `${PeriodType}夜間部`
+
+// 利用可能な期生のリスト（必要に応じて追加）
+const availablePeriods: PeriodType[] = ['22期生', '23期生', '24期生', '25期生', '26期生', '27期生', '28期生', '29期生', '30期生']
+
+// クラスオプションを動的に生成
+const generateClassOptions = (): ClassType[] => {
+  const options: ClassType[] = []
+  availablePeriods.forEach(period => {
+    options.push(`${period}昼間部` as ClassType)
+    options.push(`${period}夜間部` as ClassType)
+  })
+  return options
+}
+
+const classOptions = generateClassOptions()
+
 export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [targetType, setTargetType] = useState<'student' | 'parent' | 'all'>('all')
-  const [targetClass, setTargetClass] = useState<'昼1' | '昼2' | '昼3' | '夜1' | '夜2' | '夜3' | 'all'>('all')
+  const [targetClass, setTargetClass] = useState<ClassType | 'all'>('all')
   const [file, setFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [isBucketReady, setIsBucketReady] = useState(false)
+  const { toast } = useToast()
   const supabase = createClientComponentClient()
 
   // バケットの存在確認
@@ -105,48 +127,43 @@ export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
     }
 
     try {
-      let fileUrl = null
-      let fileType = null
+      let imageUrl = null
+      let pdfUrl = null
+      let fileType: 'image' | 'pdf' | null = null
 
       if (file) {
-        try {
-          const fileExt = file.name.split('.').pop()
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`
-          const filePath = fileName
-
-          console.log('ファイルアップロード開始:', {
-            fileName,
-            fileType: file.type,
-            fileSize: file.size,
-            timestamp: new Date().toISOString()
+        const fileExt = file.name.split('.').pop()?.toLowerCase()
+        if (fileExt === 'pdf') {
+          fileType = 'pdf'
+        } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt || '')) {
+          fileType = 'image'
+        } else {
+          toast({
+            title: "エラー",
+            description: "PDFまたは画像ファイルのみアップロード可能です",
+            variant: "destructive",
           })
+          setIsLoading(false)
+          return
+        }
 
-          const { error: uploadError, data } = await supabase.storage
-            .from('notice-attachments')
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: false
-            })
+        const fileName = `${Date.now()}-${file.name}`
+        const { data, error } = await supabase.storage
+          .from('notice-attachments')
+          .upload(fileName, file)
 
-          if (uploadError) {
-            console.error('ファイルアップロードエラー:', uploadError)
-            throw new Error(`ファイルのアップロードに失敗しました: ${uploadError.message}`)
-          }
+        if (error) {
+          throw error
+        }
 
-          console.log('ファイルアップロード成功:', {
-            path: data?.path,
-            timestamp: new Date().toISOString()
-          })
+        const { data: { publicUrl } } = supabase.storage
+          .from('notice-attachments')
+          .getPublicUrl(fileName)
 
-          const { data: { publicUrl } } = supabase.storage
-            .from('notice-attachments')
-            .getPublicUrl(filePath)
-
-          fileUrl = publicUrl
-          fileType = file.type.startsWith('image/') ? 'image' : 'pdf'
-        } catch (uploadErr) {
-          console.error('ファイルアップロード処理エラー:', uploadErr)
-          throw new Error('ファイルのアップロード処理中にエラーが発生しました')
+        if (fileType === 'pdf') {
+          pdfUrl = publicUrl
+        } else {
+          imageUrl = publicUrl
         }
       }
 
@@ -158,9 +175,9 @@ export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
             content,
             target_type: targetType,
             target_class: targetClass,
+            image_url: imageUrl,
+            pdf_url: pdfUrl,
             file_type: fileType,
-            image_url: fileType === 'image' ? fileUrl : null,
-            pdf_url: fileType === 'pdf' ? fileUrl : null
           }
         ])
 
@@ -169,7 +186,11 @@ export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
         throw new Error(`お知らせの保存に失敗しました: ${insertError.message}`)
       }
 
-      // フォームをリセット
+      toast({
+        title: "成功",
+        description: "お知らせを作成しました",
+      })
+
       setTitle('')
       setContent('')
       setTargetType('all')
@@ -231,18 +252,17 @@ export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="targetClass">クラス</Label>
-        <Select value={targetClass} onValueChange={(value) => setTargetClass(value as '昼1' | '昼2' | '昼3' | '夜1' | '夜2' | '夜3' | 'all')}>
+        <Select value={targetClass} onValueChange={(value) => setTargetClass(value as ClassType | 'all')}>
           <SelectTrigger>
-            <SelectValue placeholder="クラスを選択" />
+            <SelectValue placeholder="対象クラスを選択" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">全クラス</SelectItem>
-            <SelectItem value="昼1">昼間部1年</SelectItem>
-            <SelectItem value="昼2">昼間部2年</SelectItem>
-            <SelectItem value="昼3">昼間部3年</SelectItem>
-            <SelectItem value="夜1">夜間部1年</SelectItem>
-            <SelectItem value="夜2">夜間部2年</SelectItem>
-            <SelectItem value="夜3">夜間部3年</SelectItem>
+            {classOptions.map((classOption) => (
+              <SelectItem key={classOption} value={classOption}>
+                {classOption}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -252,7 +272,7 @@ export function NoticeForm({ onNoticeCreated }: NoticeFormProps) {
         <Input
           id="file"
           type="file"
-          accept="image/*,.pdf"
+          accept=".pdf,.jpg,.jpeg,.png,.gif"
           onChange={(e) => setFile(e.target.files?.[0] || null)}
           disabled={!isBucketReady}
         />

@@ -194,33 +194,34 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                 </Button>
               </div>
             ) : testScores.length > 0 ? (
-              <div className="overflow-x-auto">
-                <Table>
+              <div className="overflow-x-auto border rounded-lg bg-white" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 #f1f5f9' }}>
+                <div className="min-w-[1400px] w-full">
+                  <Table className="w-full">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>受験者</TableHead>
-                      <TableHead>医療概論</TableHead>
-                      <TableHead>公衆衛生</TableHead>
-                      <TableHead>関係法規</TableHead>
-                      <TableHead>解剖学</TableHead>
-                      <TableHead>生理学</TableHead>
-                      <TableHead>病理学</TableHead>
-                      <TableHead>臨床医学概論</TableHead>
-                      <TableHead>臨床医学各論</TableHead>
-                      <TableHead>リハビリテーション</TableHead>
-                      <TableHead>東洋医学概論</TableHead>
-                      <TableHead>経絡経穴</TableHead>
-                      <TableHead>東洋医学臨床論</TableHead>
-                      <TableHead>東洋医学臨床総論</TableHead>
-                      <TableHead>はり理論</TableHead>
-                      <TableHead>きゅう理論</TableHead>
-                      <TableHead>合計点</TableHead>
+                        <TableHead className="sticky left-0 bg-white z-20 min-w-[120px] border-r shadow-sm">受験者</TableHead>
+                        <TableHead className="min-w-[100px] text-center">医療概論</TableHead>
+                        <TableHead className="min-w-[100px] text-center">公衆衛生</TableHead>
+                        <TableHead className="min-w-[100px] text-center">関係法規</TableHead>
+                        <TableHead className="min-w-[100px] text-center">解剖学</TableHead>
+                        <TableHead className="min-w-[100px] text-center">生理学</TableHead>
+                        <TableHead className="min-w-[100px] text-center">病理学</TableHead>
+                        <TableHead className="min-w-[100px] text-center">臨床医学概論</TableHead>
+                        <TableHead className="min-w-[100px] text-center">臨床医学各論</TableHead>
+                        <TableHead className="min-w-[100px] text-center">リハビリテーション</TableHead>
+                        <TableHead className="min-w-[100px] text-center">東洋医学概論</TableHead>
+                        <TableHead className="min-w-[100px] text-center">経絡経穴</TableHead>
+                        <TableHead className="min-w-[100px] text-center">東洋医学臨床論</TableHead>
+                        <TableHead className="min-w-[100px] text-center">東洋医学臨床総論</TableHead>
+                        <TableHead className="min-w-[100px] text-center">はり理論</TableHead>
+                        <TableHead className="min-w-[100px] text-center">きゅう理論</TableHead>
+                        <TableHead className="min-w-[100px] text-center">合計点</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {testScores.map((score) => (
                       <TableRow key={score.id}>
-                        <TableCell className="font-medium">{score.student_name}</TableCell>
+                          <TableCell className="font-medium sticky left-0 bg-white z-20 border-r shadow-sm">{score.student_name}</TableCell>
                         <TableCell>
                           <Input
                             type="number"
@@ -228,7 +229,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.medical_overview}
                             onChange={(e) => handleScoreChange(score.student_id, "medical_overview", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -238,7 +240,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.public_health}
                             onChange={(e) => handleScoreChange(score.student_id, "public_health", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -248,7 +251,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.related_laws}
                             onChange={(e) => handleScoreChange(score.student_id, "related_laws", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -258,7 +262,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.anatomy}
                             onChange={(e) => handleScoreChange(score.student_id, "anatomy", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -268,7 +273,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.physiology}
                             onChange={(e) => handleScoreChange(score.student_id, "physiology", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -278,7 +284,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.pathology}
                             onChange={(e) => handleScoreChange(score.student_id, "pathology", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -288,7 +295,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.clinical_medicine_overview}
                             onChange={(e) => handleScoreChange(score.student_id, "clinical_medicine_overview", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -298,7 +306,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.clinical_medicine_detail}
                             onChange={(e) => handleScoreChange(score.student_id, "clinical_medicine_detail", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -308,7 +317,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.rehabilitation}
                             onChange={(e) => handleScoreChange(score.student_id, "rehabilitation", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -318,7 +328,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.oriental_medicine_overview}
                             onChange={(e) => handleScoreChange(score.student_id, "oriental_medicine_overview", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -328,7 +339,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.meridian_points}
                             onChange={(e) => handleScoreChange(score.student_id, "meridian_points", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -338,7 +350,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.oriental_medicine_clinical}
                             onChange={(e) => handleScoreChange(score.student_id, "oriental_medicine_clinical", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -348,7 +361,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.oriental_medicine_clinical_general}
                             onChange={(e) => handleScoreChange(score.student_id, "oriental_medicine_clinical_general", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -358,7 +372,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.acupuncture_theory}
                             onChange={(e) => handleScoreChange(score.student_id, "acupuncture_theory", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -368,7 +383,8 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                             max="10"
                             value={score.moxibustion_theory}
                             onChange={(e) => handleScoreChange(score.student_id, "moxibustion_theory", e.target.value)}
-                            className="w-16"
+                              className="w-16 text-center"
+                              style={{ pointerEvents: 'auto' }}
                           />
                         </TableCell>
                         <TableCell>
@@ -380,6 +396,7 @@ export function TestResultDetailPage({ testName, testDate, initialData }: TestRe
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </div>
             ) : (
               <div className="text-center py-8">

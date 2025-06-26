@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,25 @@ import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
 import { sendNoticeMail } from '@/app/utils/mail'
 import { Notice } from "@/types/notice"
+import { Trash2, Edit, Plus, Upload, Download, RefreshCw, Mail } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Progress } from "@/components/ui/progress"
+
+// 利用可能な期生のリスト（必要に応じて追加）
+const availablePeriods = ['22期生', '23期生', '24期生', '25期生', '26期生', '27期生', '28期生', '29期生', '30期生'] as const
+
+// クラスオプションを動的に生成
+const generateClassOptions = (): string[] => {
+  const options: string[] = []
+  availablePeriods.forEach(period => {
+    options.push(`${period}昼間部`)
+    options.push(`${period}夜間部`)
+  })
+  return options
+}
+
+const classOptions = generateClassOptions()
 
 export default function NoticesPage() {
   const router = useRouter()
@@ -26,7 +45,7 @@ export default function NoticesPage() {
   const [isSendingMail, setIsSendingMail] = useState(false)
   const [mailProgress, setMailProgress] = useState({ current: 0, total: 0 })
   const [targetType, setTargetType] = useState<'student' | 'parent' | 'all'>('all')
-  const [targetClass, setTargetClass] = useState<'昼1' | '昼2' | '昼3' | '夜1' | '夜2' | '夜3' | 'all'>('all')
+  const [targetClass, setTargetClass] = useState<string>('all')
 
   useEffect(() => {
     // 管理者認証チェック
@@ -423,16 +442,15 @@ export default function NoticesPage() {
                   <select
                     id="target-class"
                     value={targetClass}
-                    onChange={(e) => setTargetClass(e.target.value as '昼1' | '昼2' | '昼3' | '夜1' | '夜2' | '夜3' | 'all')}
+                    onChange={(e) => setTargetClass(e.target.value)}
                     className="mt-1 block w-full rounded-md border-brown-300 dark:border-brown-700 bg-white dark:bg-brown-900 text-brown-900 dark:text-brown-100"
                   >
                     <option value="all">全クラス</option>
-                    <option value="昼1">昼間部1年</option>
-                    <option value="昼2">昼間部2年</option>
-                    <option value="昼3">昼間部3年</option>
-                    <option value="夜1">夜間部1年</option>
-                    <option value="夜2">夜間部2年</option>
-                    <option value="夜3">夜間部3年</option>
+                    {classOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -602,16 +620,15 @@ export default function NoticesPage() {
                     <select
                       id="edit-target-class"
                       value={targetClass}
-                      onChange={(e) => setTargetClass(e.target.value as '昼1' | '昼2' | '昼3' | '夜1' | '夜2' | '夜3' | 'all')}
+                      onChange={(e) => setTargetClass(e.target.value)}
                       className="mt-1 block w-full rounded-md border-brown-300 dark:border-brown-700 bg-white dark:bg-brown-900 text-brown-900 dark:text-brown-100"
                     >
                       <option value="all">全クラス</option>
-                      <option value="昼1">昼間部1年</option>
-                      <option value="昼2">昼間部2年</option>
-                      <option value="昼3">昼間部3年</option>
-                      <option value="夜1">夜間部1年</option>
-                      <option value="夜2">夜間部2年</option>
-                      <option value="夜3">夜間部3年</option>
+                      {classOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>

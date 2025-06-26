@@ -21,6 +21,21 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+// 利用可能な期生のリスト（必要に応じて追加）
+const availablePeriods = ['22期生', '23期生', '24期生', '25期生', '26期生', '27期生', '28期生', '29期生', '30期生'] as const
+
+// クラスオプションを動的に生成
+const generateClassOptions = (): string[] => {
+  const options: string[] = []
+  availablePeriods.forEach(period => {
+    options.push(`${period}昼間部`)
+    options.push(`${period}夜間部`)
+  })
+  return options
+}
+
+const classOptions = generateClassOptions()
+
 export default function StudentsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [students, setStudents] = useState<Student[]>([])

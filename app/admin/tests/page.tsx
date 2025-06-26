@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { CharacterIcon } from "@/components/character-icon"
 import { CharacterLoading } from "@/components/character-loading"
 import { useToast } from "@/components/ui/use-toast"
-import { ChevronLeft, BarChart, Calendar, Pencil } from "lucide-react"
+import { ChevronLeft, BarChart, Calendar, Pencil, Plus } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
@@ -48,8 +48,17 @@ export default function AdminTestsPage() {
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-          fetchTests()
-  }, [])
+    // 管理者認証チェック
+    const adminLoggedIn = localStorage.getItem("adminLoggedIn")
+    const adminId = localStorage.getItem("adminId")
+
+    if (!adminLoggedIn || !adminId) {
+      router.push("/admin/login")
+      return
+    }
+
+    fetchTests()
+  }, [router])
 
   const fetchTests = async () => {
     try {
@@ -111,12 +120,23 @@ export default function AdminTestsPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <CharacterIcon size={40} />
-              <div>
-                <CardTitle>実施予定の試験</CardTitle>
-                <CardDescription>今年度に実施予定の試験一覧</CardDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CharacterIcon size={40} />
+                <div>
+                  <CardTitle>実施予定の試験</CardTitle>
+                  <CardDescription>今年度に実施予定の試験一覧</CardDescription>
+                </div>
               </div>
+              <Button
+                asChild
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Link href="/admin/tests/new">
+                  <Plus className="h-4 w-4 mr-2" />
+                  新規登録
+                </Link>
+              </Button>
             </div>
           </CardHeader>
           <CardContent>

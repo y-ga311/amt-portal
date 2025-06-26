@@ -148,9 +148,13 @@ function TestsContent() {
 
   const getGradeFromClass = (className: string | null): string | null => {
     if (!className) return null
-    if (className.includes("1")) return "1年次"
-    if (className.includes("2")) return "2年次"
-    if (className.includes("3")) return "3年次"
+    
+    // 正規表現で「数字+期生」のパターンを抽出
+    const match = className.match(/(\d+期生)/)
+    if (match) {
+      return match[1] // マッチした期生を返す
+    }
+    
     return null
   }
 

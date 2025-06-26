@@ -156,7 +156,7 @@ export default function ResultsPage() {
         // 問題数データを取得
         const questionCountsMap: { [key: string]: QuestionCounts } = {}
         
-        for (const testName of testNames) {
+          for (const testName of testNames) {
           try {
             const questionCountsResponse = await fetch(`/api/question-counts?testName=${encodeURIComponent(testName)}`)
             const questionCountsData = await questionCountsResponse.json()
@@ -431,7 +431,7 @@ export default function ResultsPage() {
                       id="test-name"
                       value={importTestName || ""}
                       onChange={(e) => setImportTestName(e.target.value)}
-                      placeholder="例：第1回模擬試験"
+                      placeholder="例：第1回模擬試験(22期生3年次)"
                     />
                   </div>
                   <div className="grid gap-2">

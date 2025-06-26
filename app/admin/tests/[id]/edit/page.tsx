@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { CharacterIcon } from "@/components/character-icon"
 import { CharacterLoading } from "@/components/character-loading"
 import { useToast } from "@/components/ui/use-toast"
-import { ChevronLeft } from "lucide-react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { ChevronLeft, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
@@ -140,6 +141,35 @@ function EditTestClient({ params }: { params: { id: string } }) {
       ...test,
       [field]: value === "" ? null : value
     })
+  }
+
+  const handleDelete = async () => {
+    if (!test) return
+
+    try {
+      const { error } = await supabase
+        .from("question_counts")
+        .delete()
+        .eq("id", test.id)
+
+      if (error) {
+        throw error
+      }
+
+      toast({
+        title: "削除完了",
+        description: "試験情報を削除しました。",
+      })
+
+      router.push("/admin/tests")
+    } catch (err) {
+      console.error("削除エラー:", err)
+      toast({
+        title: "エラー",
+        description: "削除に失敗しました。",
+        variant: "destructive",
+      })
+    }
   }
 
   if (isLoading) {
@@ -408,6 +438,28 @@ function EditTestClient({ params }: { params: { id: string } }) {
                 <Button type="button" variant="outline" asChild>
                   <Link href="/admin/tests">キャンセル</Link>
                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" variant="destructive">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      削除
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>試験の削除</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        「{test.test_name}」を削除しますか？この操作は取り消すことができません。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                        削除
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
                 <Button type="submit">保存</Button>
               </div>
             </form>

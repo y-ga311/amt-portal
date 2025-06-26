@@ -1196,8 +1196,9 @@ export default function ProfilePage() {
 
     subjects.forEach(subject => {
       const scores = results
-        .map(r => Number(r[subject as keyof TestResult]))
-        .filter(s => !isNaN(s) && s !== null)
+        .map(r => r[subject as keyof TestResult])
+        .filter(s => s !== null && s !== undefined && !isNaN(Number(s)))
+        .map(s => Number(s))
       
       if (scores.length > 0) {
         const sum = scores.reduce((acc, s) => acc + s, 0)
@@ -1307,7 +1308,7 @@ export default function ProfilePage() {
                                     </div>
                                     <div className="flex gap-4 text-xs text-gray-500">
                                       <span>最高: {testStats.subjectStats?.[subject.key]?.highest !== undefined ? testStats.subjectStats[subject.key].highest : '-'}点</span>
-                                      <span>最低: {testStats.subjectStats?.[subject.key]?.lowest !== undefined ? testStats.subjectStats[subject.key].lowest : '-'}点</span>
+                                      <span>最低: {testStats.subjectStats?.[subject.key]?.lowest !== undefined && testStats.subjectStats[subject.key].lowest !== 0 ? testStats.subjectStats[subject.key].lowest : '-'}点</span>
                                     </div>
                                   </div>
                                 </div>
@@ -1335,7 +1336,7 @@ export default function ProfilePage() {
                                     </div>
                                     <div className="flex gap-4 text-xs text-gray-500">
                                       <span>最高: {testStats.subjectStats?.[subject.key]?.highest !== undefined ? testStats.subjectStats[subject.key].highest : '-'}点</span>
-                                      <span>最低: {testStats.subjectStats?.[subject.key]?.lowest !== undefined ? testStats.subjectStats[subject.key].lowest : '-'}点</span>
+                                      <span>最低: {testStats.subjectStats?.[subject.key]?.lowest !== undefined && testStats.subjectStats[subject.key].lowest !== 0 ? testStats.subjectStats[subject.key].lowest : '-'}点</span>
                                     </div>
                                   </div>
                                 </div>
@@ -1363,7 +1364,7 @@ export default function ProfilePage() {
                                     </div>
                                     <div className="flex gap-4 text-xs text-gray-500">
                                       <span>最高: {testStats.subjectStats?.[subject.key]?.highest !== undefined ? testStats.subjectStats[subject.key].highest : '-'}点</span>
-                                      <span>最低: {testStats.subjectStats?.[subject.key]?.lowest !== undefined ? testStats.subjectStats[subject.key].lowest : '-'}点</span>
+                                      <span>最低: {testStats.subjectStats?.[subject.key]?.lowest !== undefined && testStats.subjectStats[subject.key].lowest !== 0 ? testStats.subjectStats[subject.key].lowest : '-'}点</span>
                                     </div>
                                   </div>
                                 </div>
@@ -1389,7 +1390,7 @@ export default function ProfilePage() {
                                     </div>
                                     <div className="flex gap-4 text-xs text-gray-500">
                                       <span>最高: {testStats.subjectStats?.[subject.key]?.highest !== undefined ? testStats.subjectStats[subject.key].highest : '-'}点</span>
-                                      <span>最低: {testStats.subjectStats?.[subject.key]?.lowest !== undefined ? testStats.subjectStats[subject.key].lowest : '-'}点</span>
+                                      <span>最低: {testStats.subjectStats?.[subject.key]?.lowest !== undefined && testStats.subjectStats[subject.key].lowest !== 0 ? testStats.subjectStats[subject.key].lowest : '-'}点</span>
                                     </div>
                                   </div>
                                 </div>

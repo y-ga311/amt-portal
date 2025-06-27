@@ -1003,7 +1003,7 @@ export default function ResultsPage() {
                         </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                  <Card className={result.acupunctureTotalScore >= 102 ? "bg-green-100" : "bg-red-100"}>
+                                  <Card className={result.acupunctureTotalScore >= Math.ceil(result.acupunctureTotalQuestions * 0.6) ? "bg-green-100" : "bg-red-100"}>
                                     <CardHeader>
                                       <CardTitle>はり師合格判定</CardTitle>
                                     </CardHeader>
@@ -1012,15 +1012,15 @@ export default function ResultsPage() {
                                         {result.acupunctureTotalScore} / {result.acupunctureTotalQuestions} 点
                               </div>
                                       <div className="text-sm text-gray-500">
-                                        合格基準: 102点以上（60%）
+                                        合格基準: {Math.ceil(result.acupunctureTotalQuestions * 0.6)}点以上（60%）
                             </div>
-                                      <div className={`mt-2 text-sm ${result.acupunctureTotalScore >= 102 ? 'text-green-600' : 'text-red-600'}`}>
-                                        {result.acupunctureTotalScore >= 102 ? '合格' : '不合格'}
+                                      <div className={`mt-2 text-sm ${result.acupunctureTotalScore >= Math.ceil(result.acupunctureTotalQuestions * 0.6) ? 'text-green-600' : 'text-red-600'}`}>
+                                        {result.acupunctureTotalScore >= Math.ceil(result.acupunctureTotalQuestions * 0.6) ? '合格' : '不合格'}
                           </div>
                                     </CardContent>
                                   </Card>
 
-                                  <Card className={result.moxibustionTotalScore >= 102 ? "bg-green-100" : "bg-red-100"}>
+                                  <Card className={result.moxibustionTotalScore >= Math.ceil(result.moxibustionTotalQuestions * 0.6) ? "bg-green-100" : "bg-red-100"}>
                                     <CardHeader>
                                       <CardTitle>きゅう師合格判定</CardTitle>
                                     </CardHeader>
@@ -1029,10 +1029,10 @@ export default function ResultsPage() {
                                         {result.moxibustionTotalScore} / {result.moxibustionTotalQuestions} 点
                               </div>
                                       <div className="text-sm text-gray-500">
-                                        合格基準: 102点以上（60%）
+                                        合格基準: {Math.ceil(result.moxibustionTotalQuestions * 0.6)}点以上（60%）
                             </div>
-                                      <div className={`mt-2 text-sm ${result.moxibustionTotalScore >= 102 ? 'text-green-600' : 'text-red-600'}`}>
-                                        {result.moxibustionTotalScore >= 102 ? '合格' : '不合格'}
+                                      <div className={`mt-2 text-sm ${result.moxibustionTotalScore >= Math.ceil(result.moxibustionTotalQuestions * 0.6) ? 'text-green-600' : 'text-red-600'}`}>
+                                        {result.moxibustionTotalScore >= Math.ceil(result.moxibustionTotalQuestions * 0.6) ? '合格' : '不合格'}
                           </div>
                                     </CardContent>
                                   </Card>

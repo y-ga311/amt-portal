@@ -152,6 +152,18 @@ function TestResultDetailClient({ params }: { params: { testName: string } }) {
       if (data) {
         console.log("テスト結果を取得しました:", data)
 
+        // 問題数情報を取得
+        const { data: questionCountsData, error: questionCountsError } = await supabase
+          .from("question_counts")
+          .select("*")
+          .eq("test_name", data.test_name)
+          .eq("test_date", data.test_date)
+          .maybeSingle()
+
+        if (questionCountsError) {
+          console.error("問題数情報取得エラー:", questionCountsError)
+        }
+
         // 合計点の計算
         const totalScore =
           (Number(data.medical_overview) || 0) +
@@ -199,6 +211,7 @@ function TestResultDetailClient({ params }: { params: { testName: string } }) {
           basic_medicine_score: basicMedicineScore,
           clinical_medicine_score: clinicalMedicineScore,
           oriental_medicine_score: orientalMedicineScore,
+          question_counts: questionCountsData || {},
         })
       } else {
         console.log("テスト結果が見つかりませんでした")

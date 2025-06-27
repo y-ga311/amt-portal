@@ -453,7 +453,22 @@ export default function TestResultsDetailPage({
                           <TableCell className="text-center">{score.acupuncture_theory}</TableCell>
                           <TableCell className="text-center">{score.moxibustion_theory}</TableCell>
                           <TableCell className="text-center">
-                            <Badge variant={score.total_score >= 114 ? "success" : "destructive"}>
+                            <Badge variant={score.total_score >= Math.ceil((score.medical_overview + 
+                               score.public_health + 
+                               score.related_laws + 
+                               score.anatomy + 
+                               score.physiology + 
+                               score.pathology + 
+                               score.clinical_medicine_overview + 
+                               score.clinical_medicine_detail + 
+                               score.clinical_medicine_detail_total + 
+                               score.rehabilitation + 
+                               score.oriental_medicine_overview + 
+                               score.meridian_points + 
+                               score.oriental_medicine_clinical + 
+                               score.oriental_medicine_clinical_general + 
+                               score.acupuncture_theory + 
+                               score.moxibustion_theory) * 0.6) ? "success" : "destructive"}>
                               {score.medical_overview + 
                                score.public_health + 
                                score.related_laws + 

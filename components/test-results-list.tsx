@@ -31,6 +31,7 @@ interface TestScore {
   oriental_medicine_clinical_general: number
   acupuncture_theory: number
   moxibustion_theory: number
+  question_counts: any
   [key: string]: any
 }
 
@@ -65,9 +66,6 @@ const COMMON_MAX_SCORE = 180
 
 // 合格基準（60%）
 const PASSING_PERCENTAGE = 0.6
-
-// 合格基準点
-const PASSING_SCORE = (COMMON_MAX_SCORE + 10) * PASSING_PERCENTAGE // 190点の60% = 114点
 
 // 重複を排除する関数（同じテスト名と日付の組み合わせのみ）
 function removeDuplicateTests(tests: any[]) {
@@ -104,6 +102,46 @@ export default function TestResultsList({ scores, isDashboard = false, onSuccess
     return subjects.reduce((total, subject) => {
       return total + (Number(score[subject as keyof TestScore]) || 0)
     }, 0)
+  }
+
+  // 問題数情報から動的に合格基準を計算する関数
+  const calculatePassingScore = (questionCounts: any) => {
+    if (!questionCounts) {
+      // 問題数情報がない場合は従来の計算方法を使用
+      return (COMMON_MAX_SCORE + 10) * PASSING_PERCENTAGE
+    }
+
+    // 共通問題の総問題数を計算
+    const commonQuestions = [
+      'medical_overview',
+      'public_health', 
+      'related_laws',
+      'anatomy',
+      'physiology',
+      'pathology',
+      'clinical_medicine_overview',
+      'clinical_medicine_detail',
+      'rehabilitation',
+      'oriental_medicine_overview',
+      'meridian_points',
+      'oriental_medicine_clinical',
+      'oriental_medicine_clinical_general'
+    ].reduce((total, subject) => total + (questionCounts[subject] || 0), 0)
+
+    // はり理論の問題数
+    const acupunctureQuestions = questionCounts.acupuncture_theory || 0
+    // きゅう理論の問題数
+    const moxibustionQuestions = questionCounts.moxibustion_theory || 0
+
+    // はり師合格基準（共通問題 + はり理論の60%）
+    const acupuncturePassingScore = Math.ceil((commonQuestions + acupunctureQuestions) * PASSING_PERCENTAGE)
+    // きゅう師合格基準（共通問題 + きゅう理論の60%）
+    const moxibustionPassingScore = Math.ceil((commonQuestions + moxibustionQuestions) * PASSING_PERCENTAGE)
+
+    return {
+      acupuncture: acupuncturePassingScore,
+      moxibustion: moxibustionPassingScore
+    }
   }
 
   // テスト名と日付でグループ化したテスト結果
@@ -150,11 +188,14 @@ export default function TestResultsList({ scores, isDashboard = false, onSuccess
       // きゅう師試験の合計点（共通問題 + きゅう理論）
       const moxibustionistScore = commonScore + (score.moxibustion_theory || 0)
 
-      // はり師合格判定（共通問題 + はり理論の合計が114点以上）
-      const isAcupuncturistPassing = acupuncturistScore >= PASSING_SCORE
+      // 動的に合格基準を計算
+      const passingScores = calculatePassingScore(score.question_counts)
 
-      // きゅう師合格判定（共通問題 + きゅう理論の合計が114点以上）
-      const isMoxibustionistPassing = moxibustionistScore >= PASSING_SCORE
+      // はり師合格判定
+      const isAcupuncturistPassing = acupuncturistScore >= passingScores.acupuncture
+
+      // きゅう師合格判定
+      const isMoxibustionistPassing = moxibustionistScore >= passingScores.moxibustion
 
       // 合格率の更新
       group.acupuncturistPassingRate =

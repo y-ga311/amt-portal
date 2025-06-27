@@ -44,6 +44,7 @@ interface TestScore {
   acupuncture_theory: number
   moxibustion_theory: number
   total_score?: number
+  question_counts?: any
   [key: string]: any
 }
 
@@ -109,9 +110,6 @@ const COMMON_MAX_SCORE = 180
 // 合格基準（60%）
 const PASSING_PERCENTAGE = 0.6
 
-// 合格基準点
-const PASSING_SCORE = (COMMON_MAX_SCORE + 10) * PASSING_PERCENTAGE // 190点の60% = 114点
-
 // 配色用の定数
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"]
 const PASS_COLOR = "#4ade80"
@@ -159,16 +157,58 @@ export function TestAnalysis({ testScore, allScores = [] }: TestAnalysisProps) {
   // きゅう師試験の合計点（共通問題 + きゅう理論）
   const moxibustionistScore = commonScore + (Number(testScore.moxibustion_theory) || 0)
 
-  // はり師合格判定（共通問題 + はり理論の合計が114点以上）
-  const isAcupuncturistPassing = acupuncturistScore >= PASSING_SCORE
+  // 問題数情報から動的に合格基準を計算
+  const calculatePassingScore = (questionCounts: any) => {
+    if (!questionCounts) {
+      // 問題数情報がない場合は従来の計算方法を使用
+      return (COMMON_MAX_SCORE + 10) * PASSING_PERCENTAGE
+    }
 
-  // きゅう師合格判定（共通問題 + きゅう理論の合計が114点以上）
-  const isMoxibustionistPassing = moxibustionistScore >= PASSING_SCORE
+    // 共通問題の総問題数を計算
+    const commonQuestions = [
+      'medical_overview',
+      'public_health', 
+      'related_laws',
+      'anatomy',
+      'physiology',
+      'pathology',
+      'clinical_medicine_overview',
+      'clinical_medicine_detail',
+      'rehabilitation',
+      'oriental_medicine_overview',
+      'meridian_points',
+      'oriental_medicine_clinical',
+      'oriental_medicine_clinical_general'
+    ].reduce((total, subject) => total + (questionCounts[subject] || 0), 0)
+
+    // はり理論の問題数
+    const acupunctureQuestions = questionCounts.acupuncture_theory || 0
+    // きゅう理論の問題数
+    const moxibustionQuestions = questionCounts.moxibustion_theory || 0
+
+    // はり師合格基準（共通問題 + はり理論の60%）
+    const acupuncturePassingScore = Math.ceil((commonQuestions + acupunctureQuestions) * PASSING_PERCENTAGE)
+    // きゅう師合格基準（共通問題 + きゅう理論の60%）
+    const moxibustionPassingScore = Math.ceil((commonQuestions + moxibustionQuestions) * PASSING_PERCENTAGE)
+
+    return {
+      acupuncture: acupuncturePassingScore,
+      moxibustion: moxibustionPassingScore
+    }
+  }
+
+  const passingScores = calculatePassingScore(testScore.question_counts)
+
+  // はり師合格判定
+  const isAcupuncturistPassing = acupuncturistScore >= passingScores.acupuncture
+
+  // きゅう師合格判定
+  const isMoxibustionistPassing = moxibustionistScore >= passingScores.moxibustion
 
   // 科目ごとの達成率を計算
   const subjectPerformance = Object.entries(subjectLabels).map(([key, label]) => {
     const score = Number(testScore[key]) || 0
-    const maxScore = MAX_SCORES[key as keyof typeof MAX_SCORES] || 0
+    const maxScore = testScore.question_counts?.[key] || MAX_SCORES[key as keyof typeof MAX_SCORES] || 0
     const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0
     return {
       subject: label,
@@ -226,8 +266,8 @@ export function TestAnalysis({ testScore, allScores = [] }: TestAnalysisProps) {
     .slice(0, 3)
 
   // 合格までの必要点数
-  const pointsNeededForAcupuncturist = isAcupuncturistPassing ? 0 : PASSING_SCORE - acupuncturistScore
-  const pointsNeededForMoxibustionist = isMoxibustionistPassing ? 0 : PASSING_SCORE - moxibustionistScore
+  const pointsNeededForAcupuncturist = isAcupuncturistPassing ? 0 : passingScores.acupuncture - acupuncturistScore
+  const pointsNeededForMoxibustionist = isMoxibustionistPassing ? 0 : passingScores.moxibustion - moxibustionistScore
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -647,10 +687,10 @@ export function TestAnalysis({ testScore, allScores = [] }: TestAnalysisProps) {
                   総合評価
                 </h3>
                 <p className="text-blue-700">
-                  {testScore.total_score >= PASSING_SCORE
+                  {testScore.total_score >= passingScores.acupuncture
                     ? "現在の成績は合格ラインを超えています。このまま学習を継続して、さらなる得点アップを目指しましょう。"
                     : `現在の成績は合格ラインに達していません。あと${Math.ceil(
-                        PASSING_SCORE - testScore.total_score,
+                        passingScores.acupuncture - testScore.total_score,
                       )}点の得点アップが必要です。特に苦手科目を重点的に学習することをお勧めします。`}
                 </p>
               </div>

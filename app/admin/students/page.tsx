@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { CharacterIcon } from "@/components/character-icon"
 import Link from "next/link"
-import { ChevronLeft, AlertCircle, Database, RefreshCw, Plus } from "lucide-react"
+import { ChevronLeft, AlertCircle, Database, RefreshCw, Plus, Mail } from "lucide-react"
 import StudentImport from "@/app/components/student-import"
 import StudentExport from "@/app/components/student-export"
 import type { Student } from "@/types/student"
@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import MailManagement from "@/app/components/mail-management"
 
 // 利用可能な期生のリスト（必要に応じて追加）
 const availablePeriods = ['22期生', '23期生', '24期生', '25期生', '26期生', '27期生', '28期生', '29期生', '30期生'] as const
@@ -490,6 +491,7 @@ export default function StudentsPage() {
             <TabsList>
               <TabsTrigger value="list">学生一覧</TabsTrigger>
               <TabsTrigger value="import">データ管理</TabsTrigger>
+              <TabsTrigger value="mail">メール管理</TabsTrigger>
             </TabsList>
 
             <TabsContent value="list" className="space-y-4">
@@ -546,6 +548,25 @@ export default function StudentsPage() {
                       <StudentExport students={students} />
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="mail" className="space-y-4">
+              <Card className="border-brown-200 dark:border-brown-800">
+                <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg">
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-8 w-8 text-brown-600 dark:text-brown-400" />
+                    <div>
+                      <CardTitle className="text-brown-800 dark:text-brown-100">メール管理</CardTitle>
+                      <CardDescription className="text-brown-600 dark:text-brown-300">
+                        メールアドレスが未登録の学生の管理
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="bg-white dark:bg-brown-900 p-6">
+                  <MailManagement students={students} />
                 </CardContent>
               </Card>
             </TabsContent>

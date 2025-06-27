@@ -27,7 +27,7 @@ export async function getStudents() {
     // studentsテーブルからデータを取得
     const { data, error } = await supabase
       .from("students")
-      .select("id, name, gakusei_id, gakusei_password, hogosya_id, hogosya_pass, class")
+      .select("id, name, gakusei_id, gakusei_password, hogosya_id, hogosya_pass, class, mail")
 
     if (error) {
       console.error("学生データ取得エラー:", error)
@@ -309,6 +309,37 @@ export async function checkDatabaseStructure() {
       error: error instanceof Error ? error.message : "データベース構造の確認に失敗しました",
       studentsColumns: [],
       testScoresColumns: [],
+    }
+  }
+}
+
+export async function updateStudentMail(studentId: string, mail: string) {
+  try {
+    console.log("メール更新サーバーアクション開始:", { studentId, mail })
+    
+    const supabase = createSupabaseClient()
+
+    const { data, error } = await supabase
+      .from('students')
+      .update({
+        mail: mail,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', studentId)
+      .select()
+
+    if (error) {
+      console.error("メール更新サーバーアクションエラー:", error)
+      return { success: false, error: error.message }
+    }
+
+    console.log("メール更新サーバーアクション成功:", data)
+    return { success: true, data }
+  } catch (error) {
+    console.error("メール更新サーバーアクションエラー:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "メールの更新に失敗しました",
     }
   }
 }

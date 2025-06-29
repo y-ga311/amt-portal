@@ -105,10 +105,14 @@ export default function TestResultsList({ scores, isDashboard = false, onSuccess
   }
 
   // 問題数情報から動的に合格基準を計算する関数
-  const calculatePassingScore = (questionCounts: any) => {
+  const calculatePassingScore = (questionCounts: any): { acupuncture: number; moxibustion: number } => {
     if (!questionCounts) {
       // 問題数情報がない場合は従来の計算方法を使用
-      return (COMMON_MAX_SCORE + 10) * PASSING_PERCENTAGE
+      const commonPassingScore = (COMMON_MAX_SCORE + 10) * PASSING_PERCENTAGE
+      return {
+        acupuncture: commonPassingScore,
+        moxibustion: commonPassingScore
+      }
     }
 
     // 共通問題の総問題数を計算

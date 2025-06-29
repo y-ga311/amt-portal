@@ -566,7 +566,7 @@ export default function StudentsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="bg-white dark:bg-brown-900 p-6">
-                  <MailManagement students={students} />
+                  <MailManagement />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -589,11 +589,11 @@ export default function StudentsPage() {
             }}>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="student_id" className="text-right">
-                    学生番号
+                  <Label htmlFor="id" className="text-right">
+                    ID
                   </Label>
                   <Input
-                    id="student_id"
+                    id="id"
                     value={editingStudent.id}
                     className="col-span-3"
                     disabled

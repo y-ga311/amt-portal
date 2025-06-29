@@ -1,6 +1,5 @@
 export interface Student {
   id: string
-  student_id: string
   name: string
   gakusei_id: string
   gakusei_password: string

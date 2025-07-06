@@ -220,3 +220,47 @@ export async function authenticateStudent(studentId: string, password: string) {
     }
   }
 }
+
+// ログイン履歴を更新する関数
+export async function updateLoginHistory(studentId: number, loginType: 'student' | 'parent') {
+  try {
+    const supabase = createSupabaseClient()
+    
+    // 現在のログイン情報を取得
+    const { data: currentData, error: fetchError } = await supabase
+      .from('students')
+      .select('login_count')
+      .eq('id', studentId)
+      .single()
+
+    if (fetchError) {
+      console.error('ログイン履歴取得エラー:', fetchError)
+      return { success: false, error: fetchError.message }
+    }
+
+    // ログイン回数を増加
+    const newLoginCount = (currentData?.login_count || 0) + 1
+
+    // ログイン履歴を更新（現在時刻をUTCで記録）
+    const now = new Date()
+    
+    const { error: updateError } = await supabase
+      .from('students')
+      .update({
+        last_login: now.toISOString(),
+        login_count: newLoginCount
+      })
+      .eq('id', studentId)
+
+    if (updateError) {
+      console.error('ログイン履歴更新エラー:', updateError)
+      return { success: false, error: updateError.message }
+    }
+
+    console.log(`ログイン履歴更新成功: 学生ID ${studentId}, タイプ ${loginType}, ログイン回数 ${newLoginCount}, 記録時刻: ${now.toISOString()}`)
+    return { success: true, loginCount: newLoginCount }
+  } catch (error) {
+    console.error('ログイン履歴更新エラー:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'ログイン履歴の更新に失敗しました' }
+  }
+}

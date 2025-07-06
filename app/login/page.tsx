@@ -13,7 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
-import { authenticateStudent } from "@/app/actions/auth"
+import { authenticateStudent, updateLoginHistory } from "@/app/actions/auth"
 import { checkDatabaseConnection } from "@/app/actions/database"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { CharacterIcon } from "@/components/character-icon"
@@ -159,6 +159,9 @@ function LoginContent() {
         return
       }
 
+      // 学生ログイン時はログイン履歴を更新しない（保護者のみ記録）
+      // await updateLoginHistory(data.id, 'student')
+
       // セッションストレージにユーザー情報を保存
       const userInfo = {
         id: data.id,
@@ -218,6 +221,9 @@ function LoginContent() {
         })
         return
       }
+
+      // ログイン履歴を更新
+      await updateLoginHistory(studentData.id, 'parent')
 
       // セッションストレージにユーザー情報を保存
       const userInfo = {

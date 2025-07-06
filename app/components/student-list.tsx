@@ -56,6 +56,8 @@ export default function StudentList({ students, onEdit, onDelete }: StudentListP
             <TableHead>学生用ログインID</TableHead>
             <TableHead>保護者用ログインID</TableHead>
             <TableHead>クラス</TableHead>
+            <TableHead>最新ログイン</TableHead>
+            <TableHead>ログイン回数</TableHead>
             <TableHead className="text-right">操作</TableHead>
           </TableRow>
         </TableHeader>
@@ -67,6 +69,32 @@ export default function StudentList({ students, onEdit, onDelete }: StudentListP
               <TableCell>{student.gakusei_id}</TableCell>
               <TableCell>{student.hogosya_id}</TableCell>
               <TableCell>{student.class}</TableCell>
+              <TableCell>
+                {student.last_login ? (
+                  <span title={new Date(student.last_login).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}>
+                    {(() => {
+                      const date = new Date(student.last_login)
+                      // デバッグ用：記録時刻と表示時刻をコンソールに出力
+                      console.log(`学生ID ${student.id}: 記録時刻=${student.last_login}, ローカル時刻=${date.toLocaleString()}, UTC時刻=${date.toISOString()}`)
+                      
+                      // 記録されている時刻が既に日本時間かどうかを判定
+                      // もし記録時刻が日本時間なら、そのまま表示
+                      const japanTime = new Intl.DateTimeFormat('ja-JP', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                      }).format(date)
+                      return japanTime
+                    })()}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">未ログイン</span>
+                )}
+              </TableCell>
+              <TableCell>{student.login_count || 0}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                   <Button

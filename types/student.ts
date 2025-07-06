@@ -8,6 +8,8 @@ export interface Student {
   hogosya_email?: string
   mail?: string
   class?: string
+  last_login?: string
+  login_count?: number
   created_at?: string
   updated_at?: string
 } 

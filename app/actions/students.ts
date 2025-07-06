@@ -27,7 +27,7 @@ export async function getStudents() {
     // studentsテーブルからデータを取得
     const { data, error } = await supabase
       .from("students")
-      .select("id, name, gakusei_id, gakusei_password, hogosya_id, hogosya_pass, class, mail")
+      .select("id, name, gakusei_id, gakusei_password, hogosya_id, hogosya_pass, class, mail, last_login, login_count")
 
     if (error) {
       console.error("学生データ取得エラー:", error)

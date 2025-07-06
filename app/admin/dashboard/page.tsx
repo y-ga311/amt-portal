@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Header } from "@/components/header"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useToast } from "@/hooks/use-toast"
-import { BookOpen, Users, BarChart2, Bell, LogOut } from "lucide-react"
+import { BookOpen, Users, BarChart2, Bell, LogOut, Activity } from "lucide-react"
 
 export default function AdminDashboardPage() {
   const router = useRouter()
@@ -15,6 +15,13 @@ export default function AdminDashboardPage() {
   const supabase = createClientComponentClient()
   const [adminName, setAdminName] = useState("")
   const [adminRole, setAdminRole] = useState("")
+  const [loginStats, setLoginStats] = useState({
+    totalStudents: 0,
+    activeStudents: 0,
+    inactiveStudents: 0,
+    totalLogins: 0
+  })
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
 
   useEffect(() => {
     // 管理者情報を取得
@@ -30,7 +37,60 @@ export default function AdminDashboardPage() {
 
     setAdminName(name || "管理者")
     setAdminRole(role || "super_admin")
+
+    // ログイン統計を取得
+    fetchLoginStats()
   }, [router])
+
+  const fetchLoginStats = async () => {
+    try {
+      setIsLoadingStats(true)
+      
+      // 全学生数を取得
+      const { count: totalStudents } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+
+      // アクティブな学生数（過去30日以内にログイン）を取得
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      
+      const { count: activeStudents } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .not('last_login', 'is', null)
+        .gte('last_login', thirtyDaysAgo.toISOString())
+
+      // 非アクティブな学生数（30日以上ログインしていない、または未ログイン）
+      const { count: inactiveStudents } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .or('last_login.is.null,last_login.lt.' + thirtyDaysAgo.toISOString())
+
+      // 総ログイン回数を取得
+      const { data: loginData } = await supabase
+        .from('students')
+        .select('login_count')
+
+      const totalLogins = loginData?.reduce((sum, student) => sum + (student.login_count || 0), 0) || 0
+
+      setLoginStats({
+        totalStudents: totalStudents || 0,
+        activeStudents: activeStudents || 0,
+        inactiveStudents: inactiveStudents || 0,
+        totalLogins
+      })
+    } catch (error) {
+      console.error('ログイン統計取得エラー:', error)
+      toast({
+        title: "エラー",
+        description: "ログイン統計の取得に失敗しました",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingStats(false)
+    }
+  }
 
   const handleLogout = () => {
     // 管理者情報をクリア
@@ -58,6 +118,53 @@ export default function AdminDashboardPage() {
           <p className="text-lg text-brown-600 dark:text-brown-300">
             {adminName}さん、ようこそ
           </p>
+        </div>
+
+        {/* ログイン統計カード */}
+        <div className="mb-6">
+          <Card className="border-brown-200 dark:border-brown-800">
+            <CardHeader className="bg-brown-100 dark:bg-brown-900 rounded-t-lg">
+              <div className="flex items-center space-x-2">
+                <Activity className="h-6 w-6 text-brown-600 dark:text-brown-300" />
+                <CardTitle className="text-xl text-brown-800 dark:text-brown-100">ログイン状況</CardTitle>
+              </div>
+              <CardDescription className="text-brown-600 dark:text-brown-300">
+                学生のログイン状況の概要
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {isLoadingStats ? (
+                <div className="text-center py-4">統計を読み込み中...</div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-brown-800 dark:text-brown-100">
+                      {loginStats.totalStudents}
+                    </div>
+                    <div className="text-sm text-brown-600 dark:text-brown-300">総学生数</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {loginStats.activeStudents}
+                    </div>
+                    <div className="text-sm text-brown-600 dark:text-brown-300">アクティブ（30日以内）</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-600">
+                      {loginStats.inactiveStudents}
+                    </div>
+                    <div className="text-sm text-brown-600 dark:text-brown-300">非アクティブ</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {loginStats.totalLogins}
+                    </div>
+                    <div className="text-sm text-brown-600 dark:text-brown-300">総ログイン回数</div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">

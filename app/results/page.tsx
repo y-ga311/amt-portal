@@ -390,6 +390,14 @@ export default function ResultsPage() {
     return Math.round((score / total) * 100)
   }
 
+  // 合格基準を計算する関数
+  const getPassingCriteria = (testName: string) => {
+    if (testName.includes('卒業試験')) {
+      return { percentage: 0.7, label: '70%' }
+    }
+    return { percentage: 0.6, label: '60%' }
+  }
+
   const calculateSubtotal = (result: TestResult) => {
     // 基礎医学系の小計
     const basicMedicineScore = (
@@ -597,6 +605,7 @@ export default function ResultsPage() {
       return labelMap[key] || key
     })
 
+    const criteria = getPassingCriteria(result.test_name)
     const chartData = {
       labels,
         datasets: [
@@ -608,8 +617,8 @@ export default function ResultsPage() {
           borderWidth: 2
         },
         {
-          label: '合格基準（60%）',
-          data: Array(validSubjects.length).fill(60),
+          label: `合格基準（${criteria.label}）`,
+          data: Array(validSubjects.length).fill(criteria.percentage * 100),
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
           borderWidth: 2,
@@ -1003,39 +1012,53 @@ export default function ResultsPage() {
                         </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                  <Card className={result.acupunctureTotalScore >= Math.ceil(result.acupunctureTotalQuestions * 0.6) ? "bg-green-100" : "bg-red-100"}>
-                                    <CardHeader>
-                                      <CardTitle>はり師合格判定</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                      <div className="text-2xl font-bold">
-                                        {result.acupunctureTotalScore} / {result.acupunctureTotalQuestions} 点
-                              </div>
-                                      <div className="text-sm text-gray-500">
-                                        合格基準: {Math.ceil(result.acupunctureTotalQuestions * 0.6)}点以上（60%）
-                            </div>
-                                      <div className={`mt-2 text-sm ${result.acupunctureTotalScore >= Math.ceil(result.acupunctureTotalQuestions * 0.6) ? 'text-green-600' : 'text-red-600'}`}>
-                                        {result.acupunctureTotalScore >= Math.ceil(result.acupunctureTotalQuestions * 0.6) ? '合格' : '不合格'}
-                          </div>
-                                    </CardContent>
-                                  </Card>
+                                  {(() => {
+                                    const criteria = getPassingCriteria(result.test_name)
+                                    const passingScore = Math.ceil(result.acupunctureTotalQuestions * criteria.percentage)
+                                    const isPassing = result.acupunctureTotalScore >= passingScore
+                                    return (
+                                      <Card className={isPassing ? "bg-green-100" : "bg-red-100"}>
+                                        <CardHeader>
+                                          <CardTitle>はり師合格判定</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                          <div className="text-2xl font-bold">
+                                            {result.acupunctureTotalScore} / {result.acupunctureTotalQuestions} 点
+                                          </div>
+                                          <div className="text-sm text-gray-500">
+                                            合格基準: {passingScore}点以上（{criteria.label}）
+                                          </div>
+                                          <div className={`mt-2 text-sm ${isPassing ? 'text-green-600' : 'text-red-600'}`}>
+                                            {isPassing ? '合格' : '不合格'}
+                                          </div>
+                                        </CardContent>
+                                      </Card>
+                                    )
+                                  })()}
 
-                                  <Card className={result.moxibustionTotalScore >= Math.ceil(result.moxibustionTotalQuestions * 0.6) ? "bg-green-100" : "bg-red-100"}>
-                                    <CardHeader>
-                                      <CardTitle>きゅう師合格判定</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                      <div className="text-2xl font-bold">
-                                        {result.moxibustionTotalScore} / {result.moxibustionTotalQuestions} 点
-                              </div>
-                                      <div className="text-sm text-gray-500">
-                                        合格基準: {Math.ceil(result.moxibustionTotalQuestions * 0.6)}点以上（60%）
-                            </div>
-                                      <div className={`mt-2 text-sm ${result.moxibustionTotalScore >= Math.ceil(result.moxibustionTotalQuestions * 0.6) ? 'text-green-600' : 'text-red-600'}`}>
-                                        {result.moxibustionTotalScore >= Math.ceil(result.moxibustionTotalQuestions * 0.6) ? '合格' : '不合格'}
-                          </div>
-                                    </CardContent>
-                                  </Card>
+                                  {(() => {
+                                    const criteria = getPassingCriteria(result.test_name)
+                                    const passingScore = Math.ceil(result.moxibustionTotalQuestions * criteria.percentage)
+                                    const isPassing = result.moxibustionTotalScore >= passingScore
+                                    return (
+                                      <Card className={isPassing ? "bg-green-100" : "bg-red-100"}>
+                                        <CardHeader>
+                                          <CardTitle>きゅう師合格判定</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                          <div className="text-2xl font-bold">
+                                            {result.moxibustionTotalScore} / {result.moxibustionTotalQuestions} 点
+                                          </div>
+                                          <div className="text-sm text-gray-500">
+                                            合格基準: {passingScore}点以上（{criteria.label}）
+                                          </div>
+                                          <div className={`mt-2 text-sm ${isPassing ? 'text-green-600' : 'text-red-600'}`}>
+                                            {isPassing ? '合格' : '不合格'}
+                                          </div>
+                                        </CardContent>
+                                      </Card>
+                                    )
+                                  })()}
                         </div>
 
                         <div className="mt-8">

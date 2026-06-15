@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js"
+import { decryptStudentName } from "@/lib/studentNameCrypto.server"
 
 // サーバーサイドでSupabaseクライアントを作成
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
@@ -162,6 +163,7 @@ export async function getStudentTestResults(studentId: string) {
       return { success: false, error: "学生情報が見つかりませんでした" }
     }
 
+    studentData.name = (await decryptStudentName(studentData.name)) ?? studentData.name
     console.log("取得した学生情報:", studentData)
 
     // テスト結果を取得（adminSupabaseを使用）

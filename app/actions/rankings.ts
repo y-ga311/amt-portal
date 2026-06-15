@@ -1,9 +1,8 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
 import { createClient as createSupabaseClient } from '@/utils/supabase/server'
+import { decryptStudentRows } from "@/lib/studentNameCrypto.server"
 
 // サーバーサイドでSupabaseクライアントを作成
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
@@ -61,6 +60,23 @@ export async function getTestRanking(testName: string) {
       return item
     })
 
+    const studentIds = [...new Set(processedData.map((item) => item.student_id))]
+    const nameByStudentId = new Map<number | string, string>()
+
+    if (studentIds.length > 0) {
+      const { data: students } = await adminSupabase
+        .from("students")
+        .select("id, name")
+        .in("id", studentIds)
+
+      if (students?.length) {
+        const decryptedStudents = await decryptStudentRows(students)
+        for (const student of decryptedStudents) {
+          nameByStudentId.set(student.id, student.name ?? `学生ID: ${student.id}`)
+        }
+      }
+    }
+
     // ランキングを計算
     const rankings = processedData
       .sort((a, b) => b.total_score - a.total_score)
@@ -68,6 +84,8 @@ export async function getTestRanking(testName: string) {
         ...item,
         rank: index + 1,
         score: item.total_score,
+        student_name:
+          nameByStudentId.get(item.student_id) ?? `学生ID: ${item.student_id}`,
       }))
 
     console.log(`${rankings.length}件のランキングデータを取得しました`)

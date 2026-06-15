@@ -13,22 +13,10 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
-import { authenticateStudent, updateLoginHistory } from "@/app/actions/auth"
+import { loginStudent, loginParent, updateLoginHistory } from "@/app/actions/auth"
 import { checkDatabaseConnection } from "@/app/actions/database"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { CharacterIcon } from "@/components/character-icon"
 import Link from "next/link"
-import { createClient } from '@supabase/supabase-js'
-
-// Supabaseクライアントの初期化
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Supabaseの環境変数が設定されていません')
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey)
 
 function LoginContent() {
   const [studentId, setStudentId] = useState("")
@@ -51,7 +39,6 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const userType = searchParams.get('type') || 'parent'
   const { toast } = useToast()
-  const supabase = createClientComponentClient()
   const [loginType, setLoginType] = useState<'student' | 'parent'>('student')
 
   // 環境変数の確認
@@ -131,45 +118,18 @@ function LoginContent() {
     setIsLoading(true)
 
     try {
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq('gakusei_id', studentId)
-        .single()
+      const result = await loginStudent(studentId, password)
 
-      if (error) {
-        throw error
-      }
-
-      if (!data) {
+      if (!result.success || !result.user) {
         toast({
           title: "エラー",
-          description: "学生IDが見つかりません。",
+          description: result.error || "ログインに失敗しました。",
           variant: "destructive",
         })
         return
       }
 
-      if (data.gakusei_password !== password) {
-        toast({
-          title: "エラー",
-          description: "パスワードが正しくありません。",
-          variant: "destructive",
-        })
-        return
-      }
-
-      // 学生ログイン時はログイン履歴を更新しない（保護者のみ記録）
-      // await updateLoginHistory(data.id, 'student')
-
-      // セッションストレージにユーザー情報を保存
-      const userInfo = {
-        id: data.id,
-        name: data.name,
-        class: data.class || '',
-        type: 'student'
-      }
-      sessionStorage.setItem('user', JSON.stringify(userInfo))
+      sessionStorage.setItem('user', JSON.stringify(result.user))
 
       // リダイレクト前に少し待機
       await new Promise(resolve => setTimeout(resolve, 100))
@@ -193,49 +153,20 @@ function LoginContent() {
     setIsLoading(true)
 
     try {
-      // 保護者IDで学生情報を検索
-      const { data: studentData, error: studentError } = await supabase
-        .from('students')
-        .select('*')
-        .eq('hogosya_id', studentId)
-        .single()
+      const result = await loginParent(studentId, password)
 
-      if (studentError) {
-        throw studentError
-      }
-
-      if (!studentData) {
+      if (!result.success || !result.user) {
         toast({
           title: "エラー",
-          description: "保護者IDが見つかりません。",
+          description: result.error || "ログインに失敗しました。",
           variant: "destructive",
         })
         return
       }
 
-      if (studentData.hogosya_pass !== password) {
-        toast({
-          title: "エラー",
-          description: "パスワードが正しくありません。",
-          variant: "destructive",
-        })
-        return
-      }
+      await updateLoginHistory(result.user.id, 'parent')
 
-      // ログイン履歴を更新
-      await updateLoginHistory(studentData.id, 'parent')
-
-      // セッションストレージにユーザー情報を保存
-      const userInfo = {
-        id: studentData.id,
-        name: studentData.name,
-        class: studentData.class || '',
-        type: 'parent',
-        studentId: studentData.id,
-        studentName: studentData.name,
-        studentClass: studentData.class || ''
-      }
-      sessionStorage.setItem('user', JSON.stringify(userInfo))
+      sessionStorage.setItem('user', JSON.stringify(result.user))
 
       // リダイレクト前に少し待機
       await new Promise(resolve => setTimeout(resolve, 100))

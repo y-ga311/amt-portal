@@ -1,13 +1,27 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
+import { decryptStudentRows } from "@/lib/studentNameCrypto.server"
+
+function createSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error("Supabase環境変数が設定されていません")
+  }
+
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  })
+}
 
 export async function GET() {
   try {
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = createSupabaseClient()
 
-    // 学生データを取得
     const { data: students, error } = await supabase
       .from("students")
       .select("*")
@@ -17,7 +31,8 @@ export async function GET() {
       throw error
     }
 
-    // CSVヘッダー
+    const decryptedStudents = await decryptStudentRows(students ?? [])
+
     const headers = [
       "学生番号",
       "名前",
@@ -29,8 +44,7 @@ export async function GET() {
       "クラス",
     ]
 
-    // CSVデータ行
-    const rows = students.map((student) => [
+    const rows = decryptedStudents.map((student) => [
       student.gakusei_id || "",
       student.name || "",
       student.gakusei_id || "",
@@ -41,13 +55,11 @@ export async function GET() {
       student.class || "",
     ])
 
-    // CSVデータを生成
     const csvContent = [
       headers.join(","),
       ...rows.map((row) => row.join(",")),
     ].join("\n")
 
-    // レスポンスを返す
     return new NextResponse(csvContent, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
@@ -60,7 +72,7 @@ export async function GET() {
     console.error("エクスポートエラー:", error)
     return NextResponse.json(
       { error: "エクスポートに失敗しました" },
-      { status: 500 }
+      { status: 500 },
     )
   }
-} 
+}

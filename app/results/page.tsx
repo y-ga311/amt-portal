@@ -11,6 +11,7 @@ import { ChevronLeft, AlertCircle, Database, Bug } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { getStudentTestResults } from "@/app/actions/test-scores"
+import { getStudentById } from "@/app/actions/students"
 import useEmblaCarousel from 'embla-carousel-react'
 import {
   Chart as ChartJS,
@@ -155,38 +156,23 @@ export default function ResultsPage() {
       setStudentName(userInfo.name)
     }
 
-    // studentsテーブルからidを取得
     const fetchStudentInfo = async () => {
       try {
         console.log("検索開始 - 学生ID:", userInfo.id)
         let foundStudentId = null
 
-        // idカラムで直接検索
-        const { data: students, error: studentError } = await supabase
-          .from("students")
-          .select("id, name")
-          .eq("id", userInfo.id)
-          .single()
+        const studentResult = await getStudentById(userInfo.id)
 
-        if (studentError) {
-          console.error("学生情報取得エラー詳細:", {
-            error: studentError,
-            message: studentError.message,
-            details: studentError.details,
-            hint: studentError.hint
-          })
+        if (!studentResult.success || !studentResult.data) {
+          console.error("学生情報取得エラー:", studentResult.error)
           throw new Error("学生情報の取得に失敗しました")
         }
 
-        if (!students) {
-          console.log("学生が見つかりません - ID:", userInfo.id)
-          throw new Error("学生が見つかりません")
-        }
-
+        const students = studentResult.data
         console.log("学生情報取得成功:", {
           id: students.id,
-          name: students.name
-          })
+          name: students.name,
+        })
         foundStudentId = students.id
         setStudentName(students.name)
 

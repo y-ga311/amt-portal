@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { mapScoresWithDecryptedStudentNames } from "@/lib/studentNameCrypto.server"
 
 // Supabaseクライアントを作成する関数
 function createSupabaseClient() {
@@ -48,11 +49,7 @@ export async function GET() {
       isArray: Array.isArray(testScores)
     })
 
-    // 学生名を追加
-    const scoresWithStudentName = testScores.map((score) => ({
-      ...score,
-      student_name: score.students?.name || "不明",
-    }))
+    const scoresWithStudentName = await mapScoresWithDecryptedStudentNames(testScores)
 
     console.log("処理後のテスト結果:", {
       count: scoresWithStudentName?.length || 0,

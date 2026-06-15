@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { toast } from '@/components/ui/use-toast'
 import { createBrowserClient } from '@supabase/ssr'
+import { getStudentById } from '@/app/actions/students'
 
 interface Test {
   id: number
@@ -85,19 +86,15 @@ const TestPage: React.FC = () => {
         setUserType(userInfo.type)
         setStudentId(userInfo.id.toString())
 
-        // 学生情報を取得
-        const { data: studentData, error: studentError } = await supabase
-          .from('students')
-          .select('id, name, class')
-          .eq('id', userInfo.id)
-          .single()
+        const studentResult = await getStudentById(userInfo.id)
 
-        if (studentError || !studentData) {
-          console.error('学生情報の取得に失敗:', studentError)
+        if (!studentResult.success || !studentResult.data) {
+          console.error('学生情報の取得に失敗:', studentResult.error)
           router.push('/login')
           return
         }
 
+        const studentData = studentResult.data
         console.log('学生情報取得成功:', studentData)
 
         setStudentId(studentData.id)

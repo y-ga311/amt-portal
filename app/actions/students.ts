@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js"
+import { decryptStudentName, decryptStudentRows } from "@/lib/studentNameCrypto.server"
 
 // Supabaseクライアントを作成する関数
 function createSupabaseClient() {
@@ -40,8 +41,9 @@ export async function getStudents() {
       return getStudentsFromTestScores()
     }
 
-    console.log("studentsテーブルから", data.length, "件の学生データを取得しました")
-    return { success: true, data, source: "students_table" }
+    const decryptedData = await decryptStudentRows(data)
+    console.log("studentsテーブルから", decryptedData.length, "件の学生データを取得しました")
+    return { success: true, data: decryptedData, source: "students_table" }
   } catch (error) {
     console.error("学生データ取得エラー:", error)
     return {
@@ -75,9 +77,10 @@ async function getStudentsFromTestScores() {
 
     for (const item of data) {
       if (item.id && !uniqueStudentIds.has(item.id)) {
+        const fallbackName = item.student_name || `学生${item.id}`
         uniqueStudentIds.set(item.id, {
           id: item.id,
-          name: item.student_name || `学生${item.id}`, // student_nameがない場合、IDから生成
+          name: (await decryptStudentName(fallbackName)) ?? fallbackName,
           created_at: new Date().toISOString(),
         })
       }
@@ -309,6 +312,33 @@ export async function checkDatabaseStructure() {
       error: error instanceof Error ? error.message : "データベース構造の確認に失敗しました",
       studentsColumns: [],
       testScoresColumns: [],
+    }
+  }
+}
+
+export async function getStudentById(studentId: number | string) {
+  try {
+    const supabase = createSupabaseClient()
+    const { data, error } = await supabase
+      .from("students")
+      .select("*")
+      .eq("id", studentId)
+      .single()
+
+    if (error || !data) {
+      return {
+        success: false,
+        error: error?.message || "学生情報が見つかりませんでした",
+      }
+    }
+
+    const [decrypted] = await decryptStudentRows([data])
+    return { success: true, data: decrypted }
+  } catch (error) {
+    console.error("学生情報取得エラー:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "学生情報の取得に失敗しました",
     }
   }
 }

@@ -9,8 +9,11 @@ function normalizeEncryptedStudentName(value: string) {
   return value.trim().replace(/\s+/g, "")
 }
 
-/** 平文の日本語氏名かどうか */
+/** 平文の日本語氏名かどうか（base64 暗号文は除外） */
 function looksLikePlainStudentName(value: string) {
+  if (/^[A-Za-z0-9+/]+=*$/.test(value)) {
+    return false
+  }
   return /[\u3040-\u30ff\u4e00-\u9fafA-Za-z]/.test(value) && value.length <= 40
 }
 

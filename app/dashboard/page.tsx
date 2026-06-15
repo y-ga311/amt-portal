@@ -10,6 +10,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { getStudentById } from "@/app/actions/students"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -127,10 +128,33 @@ function DashboardContent() {
       const userInfo = JSON.parse(userInfoStr)
       console.log('セッションストレージから取得したユーザー情報:', userInfo)
 
-      // ユーザー情報を設定
+      const targetStudentId =
+        userInfo.type === "parent" ? userInfo.studentId ?? userInfo.id : userInfo.id
+      const studentResult = await getStudentById(targetStudentId)
+      const displayName =
+        studentResult.success && studentResult.data
+          ? studentResult.data.name
+          : userInfo.name
+      const displayClass =
+        studentResult.success && studentResult.data
+          ? studentResult.data.class || ""
+          : userInfo.class || ""
+
+      if (studentResult.success && studentResult.data) {
+        const refreshedUser = {
+          ...userInfo,
+          name: displayName,
+          class: displayClass,
+          ...(userInfo.type === "parent"
+            ? { studentName: displayName, studentClass: displayClass }
+            : {}),
+        }
+        sessionStorage.setItem("user", JSON.stringify(refreshedUser))
+      }
+
       setStudentId(userInfo.id.toString())
-      setStudentName(userInfo.name)
-      setStudentClass(userInfo.class)
+      setStudentName(displayName)
+      setStudentClass(displayClass)
       setUserType(userInfo.type)
       setIsLoading(false)
       setIsInitialized(true)

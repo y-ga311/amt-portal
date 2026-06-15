@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { revalidatePath } from "next/cache"
 import { parse } from "csv-parse/sync"
+import { mapScoresWithDecryptedStudentNames } from "@/lib/studentNameCrypto.server"
 
 // Supabaseクライアントを作成する関数
 function createSupabaseClient() {
@@ -42,11 +43,7 @@ export async function getTestResults() {
       return { success: false, error: "テスト結果の取得に失敗しました" }
     }
 
-    // 学生名を追加
-    const scoresWithStudentName = testScores.map((score) => ({
-      ...score,
-      student_name: score.students?.name || "不明",
-    }))
+    const scoresWithStudentName = await mapScoresWithDecryptedStudentNames(testScores)
 
     return { success: true, data: scoresWithStudentName }
   } catch (error) {
@@ -98,11 +95,7 @@ export async function getTestResultsByTest(testName: string, testDate: string) {
       decodedTestDate
     });
 
-    // 学生名を追加
-    const scoresWithStudentName = testScores.map((score) => ({
-      ...score,
-      student_name: score.students?.name || "不明",
-    }))
+    const scoresWithStudentName = await mapScoresWithDecryptedStudentNames(testScores)
 
     return { success: true, data: scoresWithStudentName }
   } catch (error) {

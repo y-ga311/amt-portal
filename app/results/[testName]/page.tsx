@@ -41,21 +41,25 @@ function TestResultDetailClient({ params }: { params: { testName: string } }) {
   const decodedTestName = decodeURIComponent(params.testName)
 
   useEffect(() => {
-    // ローカルストレージから学生情報を取得
-    const storedStudentId = localStorage.getItem("studentId")
-    const storedStudentName = localStorage.getItem("studentName")
-
-    if (!storedStudentId) {
+    const userInfoStr = sessionStorage.getItem("user")
+    if (!userInfoStr) {
       router.push("/login")
       return
     }
 
-    setStudentId(storedStudentId)
-    setStudentName(storedStudentName || "")
+    const userInfo = JSON.parse(userInfoStr)
+    const id = userInfo.id?.toString()
+    if (!id) {
+      router.push("/login")
+      return
+    }
 
-    fetchTestResult(storedStudentId, decodedTestName)
+    setStudentId(id)
+    setStudentName(userInfo.name || userInfo.studentName || "")
+
+    fetchTestResult(id, decodedTestName)
     fetchRankings(decodedTestName)
-    fetchBadges(storedStudentId)
+    fetchBadges(id)
   }, [router, decodedTestName])
 
   const fetchTestResult = async (id: string, testName: string) => {

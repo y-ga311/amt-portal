@@ -25,6 +25,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { CharacterLoading } from "@/components/character-loading"
 import { getStudentTestResults } from "@/app/actions/test-scores"
+import { getStudentById } from "@/app/actions/students"
 import { Badge } from "@/components/ui/badge"
 import { BadgeDisplay } from "@/components/badge-display"
 import { LevelDisplay } from "@/components/level-display"
@@ -196,37 +197,17 @@ export default function ProfilePage() {
         // ローカルストレージの情報をクリア
         localStorage.removeItem('userInfo')
 
-        // 学生情報を取得
-        let studentData;
-        if (sessionUser.type === 'parent') {
-          // 保護者の場合、hogosya_idで検索
-          const { data, error: studentError } = await supabase
-          .from('students')
-            .select('*')
-            .eq('id', sessionUser.studentId)
-          .single()
+        const targetStudentId =
+          sessionUser.type === "parent" ? sessionUser.studentId ?? sessionUser.id : sessionUser.id
+        const studentResult = await getStudentById(targetStudentId)
 
-          if (!data) {
-            console.error('学生情報が見つかりません')
-            redirect('/login')
+        if (!studentResult.success || !studentResult.data) {
+          console.error("学生情報が見つかりません")
+          redirect("/login")
           return
         }
-          studentData = data
-        } else {
-          // 学生の場合、idで検索
-          const { data, error: studentError } = await supabase
-            .from('students')
-            .select('*')
-            .eq('id', sessionUser.id)
-            .single()
 
-          if (!data) {
-          console.error('学生情報が見つかりません')
-            redirect('/login')
-          return
-          }
-          studentData = data
-        }
+        const studentData = studentResult.data
 
         // 学生情報を設定
         setStudentId(studentData.id.toString())
@@ -381,18 +362,17 @@ export default function ProfilePage() {
           return
         }
 
-        // 学生情報を取得
-          const { data: studentData, error: studentError } = await supabase
-            .from('students')
-          .select('*')
-          .eq('id', sessionUser.type === 'parent' ? sessionUser.studentId : sessionUser.id)
-            .single()
+        const targetStudentId =
+          sessionUser.type === "parent" ? sessionUser.studentId ?? sessionUser.id : sessionUser.id
+        const studentProfileResult = await getStudentById(targetStudentId)
 
-        if (!studentData) {
-          console.error('学生情報が見つかりません')
-            redirect('/login')
-            return
-          }
+        if (!studentProfileResult.success || !studentProfileResult.data) {
+          console.error("学生情報が見つかりません")
+          redirect("/login")
+          return
+        }
+
+        const studentData = studentProfileResult.data
 
         // 学生情報を設定
         setStudentId(studentData.id.toString())
@@ -533,25 +513,17 @@ export default function ProfilePage() {
         throw new Error("学生IDが見つかりません")
       }
 
-      // 学生情報を取得
-      const { data: student, error: studentError } = await supabase
-        .from("students")
-        .select("*")
-        .eq("id", studentId)
-        .single()
+      const studentResult = await getStudentById(studentId)
 
-      if (studentError) {
-        console.error("学生情報取得エラー:", studentError)
+      if (!studentResult.success || !studentResult.data) {
+        console.error("学生情報取得エラー:", studentResult.error)
         throw new Error("学生情報の取得に失敗しました")
       }
 
-      if (!student) {
-        console.log("学生が見つかりません - 学生ID:", studentId)
-        throw new Error("学生が見つかりません")
-      }
-
+      const student = studentResult.data
       console.log("学生情報取得成功:", student)
       setStudentInfo(student)
+      setStudentName(student.name)
 
       // テスト結果を取得
       const { data: testScores, error: testScoresError } = await supabase

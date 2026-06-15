@@ -1,9 +1,8 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default async function DebugStudentPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = await createClient()
 
   // 学生情報を取得
   const { data: students, error: studentsError } = await supabase

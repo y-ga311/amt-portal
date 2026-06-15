@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js"
+import { decryptStudentName } from "@/lib/studentNameCrypto.server"
 
 // Supabaseクライアントを作成する関数
 function createSupabaseClient() {
@@ -190,11 +191,14 @@ export async function authenticateStudent(studentId: string, password: string) {
         })
 
       if (String(studentData.password) === password) {
+          const decryptedName =
+            (await decryptStudentName(studentData.name)) ||
+            `学生${studentData.student_id}`
           return {
             success: true,
             student: {
             student_id: studentData.student_id,
-            name: studentData.name || `学生${studentData.student_id}`,
+            name: decryptedName,
             },
             message: "認証成功",
           }
@@ -217,6 +221,89 @@ export async function authenticateStudent(studentId: string, password: string) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "認証処理中にエラーが発生しました",
+    }
+  }
+}
+
+export async function loginStudent(gakuseiId: string, password: string) {
+  try {
+    if (!gakuseiId || !password) {
+      return { success: false, error: "ログインIDとパスワードの両方が必要です" }
+    }
+
+    const supabase = createSupabaseClient()
+    const { data, error } = await supabase
+      .from("students")
+      .select("id, name, class, gakusei_password")
+      .eq("gakusei_id", gakuseiId)
+      .single()
+
+    if (error || !data) {
+      return { success: false, error: "学生IDが見つかりません。" }
+    }
+
+    if (data.gakusei_password !== password) {
+      return { success: false, error: "パスワードが正しくありません。" }
+    }
+
+    const name = (await decryptStudentName(data.name)) || data.name || ""
+    return {
+      success: true,
+      user: {
+        id: data.id,
+        name,
+        class: data.class || "",
+        type: "student" as const,
+      },
+    }
+  } catch (error) {
+    console.error("学生ログインエラー:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "ログイン処理中にエラーが発生しました",
+    }
+  }
+}
+
+export async function loginParent(hogosyaId: string, password: string) {
+  try {
+    if (!hogosyaId || !password) {
+      return { success: false, error: "ログインIDとパスワードの両方が必要です" }
+    }
+
+    const supabase = createSupabaseClient()
+    const { data, error } = await supabase
+      .from("students")
+      .select("id, name, class, hogosya_pass")
+      .eq("hogosya_id", hogosyaId)
+      .single()
+
+    if (error || !data) {
+      return { success: false, error: "保護者IDが見つかりません。" }
+    }
+
+    if (data.hogosya_pass !== password) {
+      return { success: false, error: "パスワードが正しくありません。" }
+    }
+
+    const name = (await decryptStudentName(data.name)) || data.name || ""
+    return {
+      success: true,
+      user: {
+        id: data.id,
+        name,
+        class: data.class || "",
+        type: "parent" as const,
+        studentId: data.id,
+        studentName: name,
+        studentClass: data.class || "",
+      },
+    }
+  } catch (error) {
+    console.error("保護者ログインエラー:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "ログイン処理中にエラーが発生しました",
     }
   }
 }

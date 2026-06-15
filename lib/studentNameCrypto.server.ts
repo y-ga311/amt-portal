@@ -17,9 +17,27 @@ function looksLikePlainStudentName(value: string) {
   return /[\u3040-\u30ff\u4e00-\u9fafA-Za-z]/.test(value) && value.length <= 40
 }
 
+function isBase64Ciphertext(value: string) {
+  if (!/^[A-Za-z0-9+/]+=*$/.test(value)) {
+    return false
+  }
+
+  try {
+    return Buffer.from(value, "base64").length >= 8
+  } catch {
+    return false
+  }
+}
+
 /** PostgreSQL pgp_sym_encrypt + base64 で保存された氏名かどうか */
 export function looksLikeEncryptedStudentName(value: string) {
   const trimmed = normalizeEncryptedStudentName(value)
+
+  // 短い平文（てすと等）はここで除外。base64 は長さに関係なく先に判定
+  if (isBase64Ciphertext(trimmed)) {
+    return true
+  }
+
   if (trimmed.length < 20) {
     return false
   }
@@ -28,55 +46,66 @@ export function looksLikeEncryptedStudentName(value: string) {
     return false
   }
 
-  if (/^[A-Za-z0-9+/]+=*$/.test(trimmed)) {
-    try {
-      return Buffer.from(trimmed, "base64").length >= 12
-    } catch {
-      return false
-    }
-  }
-
   return /^[\x21-\x7e]+$/.test(trimmed)
 }
 
 async function decryptWithPostgresRpc(
   encrypted: string,
   encryptionKey: string,
+  original: string,
 ): Promise<string | null> {
   const supabase = createServiceRoleClient()
   if (!supabase) {
     return null
   }
 
-  const { data, error } = await supabase.rpc("decrypt_student_name", {
-    encrypted_name: encrypted,
-    secret_key: encryptionKey,
-  })
+  const candidates = [encrypted]
+  if (original !== encrypted) {
+    candidates.push(original)
+  }
 
-  if (error) {
-    if (
-      error.message.includes("decrypt_student_name") ||
-      error.code === "PGRST202"
-    ) {
-      console.warn(
-        "[studentNameCrypto] decrypt_student_name RPC is missing. Run docs/sql/create-decrypt-student-name-function.sql in Supabase.",
-      )
-    } else {
-      console.error("[studentNameCrypto] rpc decrypt failed:", error.message)
+  for (const candidate of candidates) {
+    const { data, error } = await supabase.rpc("decrypt_student_name", {
+      encrypted_name: candidate,
+      secret_key: encryptionKey,
+    })
+
+    if (error) {
+      if (
+        error.message.includes("decrypt_student_name") ||
+        error.code === "PGRST202"
+      ) {
+        console.warn(
+          "[studentNameCrypto] decrypt_student_name RPC is missing. Run docs/sql/create-decrypt-student-name-function.sql in Supabase.",
+        )
+      } else {
+        console.error("[studentNameCrypto] rpc decrypt failed:", error.message)
+      }
+      continue
     }
-    return null
+
+    if (typeof data !== "string") {
+      continue
+    }
+
+    const decrypted = data.trim()
+    if (!decrypted) {
+      continue
+    }
+
+    const normalizedCandidate = normalizeEncryptedStudentName(candidate)
+    if (
+      decrypted === candidate ||
+      decrypted === normalizedCandidate ||
+      decrypted === original
+    ) {
+      continue
+    }
+
+    return decrypted
   }
 
-  if (typeof data !== "string") {
-    return null
-  }
-
-  const decrypted = data.trim()
-  if (!decrypted || decrypted === encrypted) {
-    return null
-  }
-
-  return decrypted
+  return null
 }
 
 export async function decryptStudentName(
@@ -92,7 +121,10 @@ export async function decryptStudentName(
   }
 
   const encrypted = normalizeEncryptedStudentName(trimmed)
-  if (!looksLikeEncryptedStudentName(encrypted)) {
+  const shouldTryDecrypt =
+    isBase64Ciphertext(encrypted) || looksLikeEncryptedStudentName(encrypted)
+
+  if (!shouldTryDecrypt) {
     return trimmed
   }
 
@@ -104,7 +136,11 @@ export async function decryptStudentName(
     return trimmed
   }
 
-  const pgDecrypted = await decryptWithPostgresRpc(encrypted, encryptionKey)
+  const pgDecrypted = await decryptWithPostgresRpc(
+    encrypted,
+    encryptionKey,
+    trimmed,
+  )
   if (pgDecrypted) {
     return pgDecrypted
   }

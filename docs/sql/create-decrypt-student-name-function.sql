@@ -28,27 +28,22 @@ BEGIN
 
   normalized_name := regexp_replace(btrim(encrypted_name), '\s+', '', 'g');
 
-  -- 平文の日本語氏名（短い・非 base64）はそのまま返す
-  IF length(normalized_name) < 20
-     OR normalized_name ~ '[ぁ-んァ-ン一-龥A-Za-z]'
-        AND normalized_name !~ '^[A-Za-z0-9+/]+=*$' THEN
-    RETURN btrim(encrypted_name);
+  -- base64 暗号文は長さに関係なく復号を試みる（「てすと」等の短い暗号文対応）
+  IF normalized_name ~ '^[A-Za-z0-9+/]+=*$' THEN
+    BEGIN
+      decrypted := pgp_sym_decrypt(
+        decode(normalized_name, 'base64'),
+        secret_key
+      );
+      RETURN btrim(decrypted);
+    EXCEPTION
+      WHEN OTHERS THEN
+        RETURN btrim(encrypted_name);
+    END;
   END IF;
 
-  IF normalized_name !~ '^[A-Za-z0-9+/]+=*$' THEN
-    RETURN btrim(encrypted_name);
-  END IF;
-
-  BEGIN
-    decrypted := pgp_sym_decrypt(
-      decode(normalized_name, 'base64'),
-      secret_key
-    );
-    RETURN btrim(decrypted);
-  EXCEPTION
-    WHEN OTHERS THEN
-      RETURN btrim(encrypted_name);
-  END;
+  -- 平文の氏名はそのまま返す
+  RETURN btrim(encrypted_name);
 END;
 $$;
 

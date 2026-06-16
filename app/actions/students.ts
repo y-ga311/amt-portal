@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js"
-import { decryptStudentName, decryptStudentRows, encryptStudentNameForStorage } from "@/lib/studentNameCrypto.server"
+import { decryptStudentName, decryptStudentRows, prepareStudentNameForStorage } from "@/lib/studentNameCrypto.server"
 
 // Supabaseクライアントを作成する関数
 function createSupabaseClient() {
@@ -129,7 +129,7 @@ export async function addOrUpdateStudent(student: any) {
       mail: student.mail || "未設定",
     })
 
-    const encryptedName = await encryptStudentNameForStorage(student.name)
+    const encryptedName = await prepareStudentNameForStorage(student.name)
     if (!encryptedName) {
       return {
         success: false,
@@ -349,7 +349,7 @@ export async function createStudent(
       return { success: false, error: "必須フィールドが不足しています" }
     }
 
-    const encryptedName = await encryptStudentNameForStorage(student.name)
+    const encryptedName = await prepareStudentNameForStorage(student.name)
     if (!encryptedName) {
       return {
         success: false,
@@ -399,7 +399,7 @@ export async function updateStudent(
       return { success: false, error: "名前は必須です" }
     }
 
-    const encryptedName = await encryptStudentNameForStorage(student.name)
+    const encryptedName = await prepareStudentNameForStorage(student.name)
     if (!encryptedName) {
       return {
         success: false,

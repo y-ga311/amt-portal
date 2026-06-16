@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { getStudents, checkDatabaseStructure, createStudent, updateStudent } from "@/app/actions/students"
+import { getStudents, checkDatabaseStructure, createStudent, updateStudent, getStudentById } from "@/app/actions/students"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -88,56 +88,35 @@ export default function StudentsPage() {
     fetchData()
   }, [])
 
-  const loadFromLocalStorage = () => {
-    try {
-      const cachedStudents = localStorage.getItem("cachedStudents")
-      if (cachedStudents) {
-        const parsedStudents = JSON.parse(cachedStudents)
-        if (Array.isArray(parsedStudents) && parsedStudents.length > 0) {
-          setStudents(parsedStudents)
-          return true
-        }
-      }
-      return false
-    } catch (e) {
-      console.error("キャッシュデータの解析エラー:", e)
-      return false
-    }
-  }
-
   const fetchStudents = async () => {
     try {
       console.log("学生データ取得を開始します")
       setError("")
 
-      // サーバーアクションを使用して学生データを取得
       const result = await getStudents()
 
       if (!result.success) {
         console.error("学生データ取得エラー:", result.error)
         setError(result.error || "学生データの取得に失敗しました")
-        // ローカルストレージのデータを使用
-        return loadFromLocalStorage()
+        return false
       }
 
       if (!result.data || result.data.length === 0) {
         console.log("データがありません")
         setDataSource("no_data")
+        setStudents([])
         return false
       }
 
       console.log(result.source + "から", result.data.length, "件の学生データを取得しました")
       setStudents(result.data)
       setDataSource(result.source || "unknown")
-
-      // 取得したデータをローカルストレージにもキャッシュ
-      localStorage.setItem("cachedStudents", JSON.stringify(result.data))
+      localStorage.removeItem("cachedStudents")
       return true
     } catch (error) {
       console.error("学生データ取得エラー:", error)
       setError(error instanceof Error ? error.message : "学生データの取得に失敗しました")
-      // ローカルストレージのデータを使用
-      return loadFromLocalStorage()
+      return false
     }
   }
 
@@ -169,18 +148,12 @@ export default function StudentsPage() {
   }
 
   // 学生データ更新のためのハンドラ
-  const handleStudentImportSuccess = (newStudents: Student[]) => {
+  const handleStudentImportSuccess = async () => {
     try {
-      // 新しい学生データを既存のデータと結合
-      const updatedStudents = mergeStudentData(students, newStudents)
-      setStudents(updatedStudents)
-
-      // キャッシュを更新
-      localStorage.setItem("cachedStudents", JSON.stringify(updatedStudents))
-
-      // データ再取得
-      fetchStudents().catch((err) => {
-        console.error("データ再取得エラー:", err)
+      await fetchStudents()
+      toast({
+        title: "完了",
+        description: "学生一覧を更新しました",
       })
     } catch (error) {
       console.error("データ更新エラー:", error)
@@ -223,14 +196,17 @@ export default function StudentsPage() {
     }
   }
 
-  const handleEdit = (student: any) => {
+  const handleEdit = async (student: Student) => {
+    const result = await getStudentById(student.id)
+    const source = result.success && result.data ? result.data : student
+
     setEditingStudent({
-      ...student,
-      gakusei_id: student.gakusei_id || "",
-      gakusei_password: student.gakusei_password || "",
-      hogosya_id: student.hogosya_id || "",
-      hogosya_pass: student.hogosya_pass || "",
-      class: student.class || ""
+      ...source,
+      gakusei_id: source.gakusei_id || "",
+      gakusei_password: source.gakusei_password || "",
+      hogosya_id: source.hogosya_id || "",
+      hogosya_pass: source.hogosya_pass || "",
+      class: source.class || "",
     })
     setIsEditDialogOpen(true)
   }

@@ -27,10 +27,17 @@ BEGIN
 
   normalized_name := regexp_replace(btrim(plain_name), '\s+', '', 'g');
 
-  -- ひらがな・カタカナ・漢字を含まない base64 形式 → 既に暗号化済みとしてそのまま返す
+  -- base64 形式かつ復号対象サイズ → 既に暗号化済みとしてそのまま返す
   IF normalized_name !~ '[ぁ-んァ-ン一-龥]'
      AND normalized_name ~ '^[A-Za-z0-9+/]+=*$' THEN
-    RETURN normalized_name;
+    BEGIN
+      IF length(decode(normalized_name, 'base64')) >= 8 THEN
+        RETURN normalized_name;
+      END IF;
+    EXCEPTION
+      WHEN OTHERS THEN
+        NULL;
+    END;
   END IF;
 
   RETURN encode(

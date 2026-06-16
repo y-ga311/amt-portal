@@ -1,25 +1,28 @@
-import { createClient } from '@/utils/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { createClient } from "@/utils/supabase/server"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { decryptStudentRows } from "@/lib/studentNameCrypto.server"
 
 export default async function DebugStudentPage() {
   const supabase = await createClient()
 
-  // 学生情報を取得
   const { data: students, error: studentsError } = await supabase
-    .from('students')
-    .select('*')
-    .order('id', { ascending: true })
+    .from("students")
+    .select("*")
+    .order("id", { ascending: true })
 
-  // テストスコアを取得
+  const decryptedStudents = students
+    ? await decryptStudentRows(students)
+    : null
+
   const { data: testScores, error: testScoresError } = await supabase
-    .from('test_scores')
+    .from("test_scores")
     .select(`
       *,
       question_counts (
         *
       )
     `)
-    .order('created_at', { ascending: false })
+    .order("created_at", { ascending: false })
 
   return (
     <div className="container mx-auto p-4">
@@ -27,14 +30,14 @@ export default async function DebugStudentPage() {
 
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle>学生情報</CardTitle>
+          <CardTitle>学生情報（氏名は復号済みで表示）</CardTitle>
         </CardHeader>
         <CardContent>
           {studentsError ? (
             <div className="text-red-500">エラー: {studentsError.message}</div>
           ) : (
             <pre className="bg-gray-100 p-4 rounded overflow-auto">
-              {JSON.stringify(students, null, 2)}
+              {JSON.stringify(decryptedStudents, null, 2)}
             </pre>
           )}
         </CardContent>
@@ -56,4 +59,4 @@ export default async function DebugStudentPage() {
       </Card>
     </div>
   )
-} 
+}

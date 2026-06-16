@@ -179,6 +179,35 @@ export async function encryptStudentNameForStorage(
   return encryptWithPostgresRpc(trimmed, encryptionKey)
 }
 
+/**
+ * 管理画面の登録・更新用: 入力値を一度平文化してから暗号化する。
+ * 編集フォームに暗号文が残っていても二重暗号化しない。
+ */
+export async function prepareStudentNameForStorage(
+  value: string | null | undefined,
+): Promise<string | null> {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return trimmed
+  }
+
+  const plaintext = (await decryptStudentName(trimmed)) ?? trimmed
+  const normalizedPlain = normalizeStudentName(plaintext)
+
+  if (looksLikeEncryptedStudentName(normalizedPlain)) {
+    console.error(
+      "[studentNameCrypto] Could not normalize student name to plaintext before encryption.",
+    )
+    return null
+  }
+
+  return encryptStudentNameForStorage(plaintext)
+}
+
 export async function decryptStudentName(
   value: string | null | undefined,
 ): Promise<string | null> {

@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/header"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { getStudents, checkDatabaseStructure } from "@/app/actions/students"
+import { getStudents, checkDatabaseStructure, createStudent, updateStudent } from "@/app/actions/students"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -249,36 +249,22 @@ export default function StudentsPage() {
         return
       }
 
-      // 学生情報を更新
-      const { data, error } = await supabase
-        .from('students')
-        .update({
-          name: editingStudent.name,
-          gakusei_id: editingStudent.gakusei_id,
-          gakusei_password: editingStudent.gakusei_password,
-          hogosya_id: editingStudent.hogosya_id,
-          hogosya_pass: editingStudent.hogosya_pass,
-          class: editingStudent.class,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', editingStudent.id)
-        .select()
+      // 学生情報を更新（サーバー側で氏名を暗号化して保存）
+      const result = await updateStudent(editingStudent.id, {
+        name: editingStudent.name,
+        gakusei_id: editingStudent.gakusei_id,
+        gakusei_password: editingStudent.gakusei_password,
+        hogosya_id: editingStudent.hogosya_id,
+        hogosya_pass: editingStudent.hogosya_pass,
+        class: editingStudent.class,
+        mail: editingStudent.mail,
+      })
 
-      if (error) {
-        console.error("学生情報更新エラー:", error.message)
+      if (!result.success) {
+        console.error("学生情報更新エラー:", result.error)
         toast({
           title: "エラー",
-          description: `学生情報の更新に失敗しました: ${error.message}`,
-          variant: "destructive",
-        })
-        return
-      }
-
-      if (!data || data.length === 0) {
-        console.error("学生情報更新エラー: 更新されたデータが見つかりません")
-        toast({
-          title: "エラー",
-          description: "学生情報の更新に失敗しました: 更新されたデータが見つかりません",
+          description: result.error || "学生情報の更新に失敗しました",
           variant: "destructive",
         })
         return
@@ -350,21 +336,18 @@ export default function StudentsPage() {
 
   const handleAddStudent = async (student: Omit<Student, "id" | "created_at" | "updated_at">) => {
     try {
-      const { data, error } = await supabase
-        .from('students')
-        .insert([{
-          ...student,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
-        .select()
+      const result = await createStudent({
+        name: student.name,
+        gakusei_id: student.gakusei_id,
+        gakusei_password: student.gakusei_password,
+        hogosya_id: student.hogosya_id,
+        hogosya_pass: student.hogosya_pass,
+        class: student.class,
+        mail: student.mail,
+      })
 
-      if (error) {
-        throw error
-      }
-
-      if (!data || data.length === 0) {
-        throw new Error("登録されたデータが見つかりません")
+      if (!result.success) {
+        throw new Error(result.error || "学生の登録に失敗しました")
       }
 
       toast({

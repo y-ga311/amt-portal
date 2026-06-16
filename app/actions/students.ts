@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js"
-import { decryptStudentName, decryptStudentRows } from "@/lib/studentNameCrypto.server"
+import { decryptStudentName, decryptStudentRows, encryptStudentNameForStorage } from "@/lib/studentNameCrypto.server"
 
 // Supabaseクライアントを作成する関数
 function createSupabaseClient() {
@@ -129,6 +129,15 @@ export async function addOrUpdateStudent(student: any) {
       mail: student.mail || "未設定",
     })
 
+    const encryptedName = await encryptStudentNameForStorage(student.name)
+    if (!encryptedName) {
+      return {
+        success: false,
+        error:
+          "氏名の暗号化に失敗しました。STUDENT_NAME_ENCRYPTION_KEY と encrypt_student_name RPC を確認してください。",
+      }
+    }
+
     const supabase = createSupabaseClient()
 
     // まず既存の学生を確認（IDで検索）
@@ -154,7 +163,7 @@ export async function addOrUpdateStudent(student: any) {
         result = await supabase
           .from("students")
           .update({
-            name: student.name,
+            name: encryptedName,
             gakusei_id: student.gakusei_id,
             gakusei_password: student.gakusei_password,
             hogosya_id: student.hogosya_id,
@@ -168,7 +177,7 @@ export async function addOrUpdateStudent(student: any) {
         console.log("新しい学生を挿入します:", student.id)
         result = await supabase.from("students").insert({
           id: student.id,
-          name: student.name,
+          name: encryptedName,
           gakusei_id: student.gakusei_id,
           gakusei_password: student.gakusei_password,
           hogosya_id: student.hogosya_id,
@@ -312,6 +321,121 @@ export async function checkDatabaseStructure() {
       error: error instanceof Error ? error.message : "データベース構造の確認に失敗しました",
       studentsColumns: [],
       testScoresColumns: [],
+    }
+  }
+}
+
+type StudentInput = {
+  name: string
+  gakusei_id: string
+  gakusei_password: string
+  hogosya_id: string
+  hogosya_pass: string
+  class?: string
+  mail?: string
+}
+
+export async function createStudent(
+  student: Omit<StudentInput, "id">,
+) {
+  try {
+    if (
+      !student.name ||
+      !student.gakusei_id ||
+      !student.gakusei_password ||
+      !student.hogosya_id ||
+      !student.hogosya_pass
+    ) {
+      return { success: false, error: "必須フィールドが不足しています" }
+    }
+
+    const encryptedName = await encryptStudentNameForStorage(student.name)
+    if (!encryptedName) {
+      return {
+        success: false,
+        error:
+          "氏名の暗号化に失敗しました。STUDENT_NAME_ENCRYPTION_KEY と encrypt_student_name RPC を確認してください。",
+      }
+    }
+
+    const supabase = createSupabaseClient()
+    const { data, error } = await supabase
+      .from("students")
+      .insert({
+        name: encryptedName,
+        gakusei_id: student.gakusei_id,
+        gakusei_password: student.gakusei_password,
+        hogosya_id: student.hogosya_id,
+        hogosya_pass: student.hogosya_pass,
+        class: student.class,
+        mail: student.mail,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single()
+
+    if (error || !data) {
+      return { success: false, error: error?.message || "学生の登録に失敗しました" }
+    }
+
+    const [decrypted] = await decryptStudentRows([data])
+    return { success: true, data: decrypted }
+  } catch (error) {
+    console.error("学生登録エラー:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "学生の登録に失敗しました",
+    }
+  }
+}
+
+export async function updateStudent(
+  studentId: string,
+  student: StudentInput,
+) {
+  try {
+    if (!student.name) {
+      return { success: false, error: "名前は必須です" }
+    }
+
+    const encryptedName = await encryptStudentNameForStorage(student.name)
+    if (!encryptedName) {
+      return {
+        success: false,
+        error:
+          "氏名の暗号化に失敗しました。STUDENT_NAME_ENCRYPTION_KEY と encrypt_student_name RPC を確認してください。",
+      }
+    }
+
+    const supabase = createSupabaseClient()
+    const { data, error } = await supabase
+      .from("students")
+      .update({
+        name: encryptedName,
+        gakusei_id: student.gakusei_id,
+        gakusei_password: student.gakusei_password,
+        hogosya_id: student.hogosya_id,
+        hogosya_pass: student.hogosya_pass,
+        class: student.class,
+        mail: student.mail,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", studentId)
+      .select()
+      .single()
+
+    if (error || !data) {
+      return { success: false, error: error?.message || "学生情報の更新に失敗しました" }
+    }
+
+    const [decrypted] = await decryptStudentRows([data])
+    return { success: true, data: decrypted }
+  } catch (error) {
+    console.error("学生更新エラー:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "学生情報の更新に失敗しました",
     }
   }
 }

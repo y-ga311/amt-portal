@@ -1,7 +1,30 @@
 import { createServiceRoleClient } from "@/lib/supabase/serviceRole"
 
-function getEncryptionKey() {
-  return process.env.STUDENT_NAME_ENCRYPTION_KEY?.trim() ?? ""
+/** 移行期間中に使われていたプレースホルダーキー（旧暗号化データの復号用） */
+const LEGACY_PLACEHOLDER_KEY = "ここに暗号化キーを設定"
+
+/** DB 保存用の現行暗号化キー（環境変数のみ。Git にコミットしない） */
+export function getPrimaryEncryptionKey(): string | null {
+  const key = process.env.STUDENT_NAME_ENCRYPTION_KEY?.trim()
+  return key || null
+}
+
+function getEncryptionKeys(): string[] {
+  const keys: string[] = []
+  const add = (value: string | undefined) => {
+    const trimmed = value?.trim()
+    if (trimmed && !keys.includes(trimmed)) {
+      keys.push(trimmed)
+    }
+  }
+
+  add(process.env.STUDENT_NAME_ENCRYPTION_KEY)
+  add(process.env.STUDENT_NAME_ENCRYPTION_KEY_LEGACY)
+  if (!keys.includes(LEGACY_PLACEHOLDER_KEY)) {
+    add(LEGACY_PLACEHOLDER_KEY)
+  }
+
+  return keys
 }
 
 /** Supabase 表示などで base64 暗号文に改行が混ざることがある */
@@ -78,13 +101,82 @@ async function decryptWithPostgresRpc(
 
   // RPC が復号失敗時に暗号文をそのまま返した場合は採用しない
   if (
-    looksLikeEncryptedStudentName(decrypted) &&
+    decrypted === encrypted ||
     normalizeStudentName(decrypted) === encrypted
   ) {
     return null
   }
 
   return decrypted
+}
+
+async function encryptWithPostgresRpc(
+  plainName: string,
+  encryptionKey: string,
+): Promise<string | null> {
+  const supabase = createServiceRoleClient()
+  if (!supabase) {
+    return null
+  }
+
+  const { data, error } = await supabase.rpc("encrypt_student_name", {
+    plain_name: plainName,
+    secret_key: encryptionKey,
+  })
+
+  if (error) {
+    if (
+      error.message.includes("encrypt_student_name") ||
+      error.code === "PGRST202"
+    ) {
+      console.warn(
+        "[studentNameCrypto] encrypt_student_name RPC is missing. Run docs/sql/create-encrypt-student-name-function.sql in Supabase.",
+      )
+    } else {
+      console.error("[studentNameCrypto] rpc encrypt failed:", error.message)
+    }
+    return null
+  }
+
+  if (typeof data !== "string") {
+    return null
+  }
+
+  const encrypted = normalizeStudentName(data)
+  if (!encrypted || !looksLikeEncryptedStudentName(encrypted)) {
+    return null
+  }
+
+  return encrypted
+}
+
+/** 平文氏名を DB 保存用に暗号化（既に暗号化済みならそのまま返す） */
+export async function encryptStudentNameForStorage(
+  value: string | null | undefined,
+): Promise<string | null> {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return trimmed
+  }
+
+  const normalized = normalizeStudentName(trimmed)
+  if (looksLikeEncryptedStudentName(normalized)) {
+    return normalized
+  }
+
+  const encryptionKey = getPrimaryEncryptionKey()
+  if (!encryptionKey) {
+    console.error(
+      "[studentNameCrypto] STUDENT_NAME_ENCRYPTION_KEY is not set. Cannot encrypt student name for storage.",
+    )
+    return null
+  }
+
+  return encryptWithPostgresRpc(trimmed, encryptionKey)
 }
 
 export async function decryptStudentName(
@@ -106,17 +198,38 @@ export async function decryptStudentName(
     return trimmed
   }
 
-  const encryptionKey = getEncryptionKey()
-  if (!encryptionKey) {
+  const encryptionKeys = getEncryptionKeys()
+  if (encryptionKeys.length === 0) {
     console.warn(
       "[studentNameCrypto] STUDENT_NAME_ENCRYPTION_KEY is not set. Encrypted student names cannot be decrypted.",
     )
     return trimmed
   }
 
-  const pgDecrypted = await decryptWithPostgresRpc(normalized, encryptionKey)
-  if (pgDecrypted) {
-    return pgDecrypted
+  // 二重暗号化など、復号結果がまだ暗号文の場合は最大5回まで再試行
+  let candidate = normalized
+  for (let depth = 0; depth < 5; depth++) {
+    if (!looksLikeEncryptedStudentName(candidate)) {
+      return candidate
+    }
+
+    let decrypted: string | null = null
+    for (const encryptionKey of encryptionKeys) {
+      decrypted = await decryptWithPostgresRpc(candidate, encryptionKey)
+      if (decrypted) {
+        break
+      }
+    }
+
+    if (!decrypted) {
+      break
+    }
+
+    candidate = normalizeStudentName(decrypted)
+  }
+
+  if (!looksLikeEncryptedStudentName(candidate)) {
+    return candidate
   }
 
   console.error(
